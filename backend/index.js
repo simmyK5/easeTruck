@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
 
 async function connectMongoDB() {
   try {
-    await mongoose.connect("mongodb+srv://simphiweadmin:<password>@easetruckdb.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000");
+    await mongoose.connect("mongodb+srv://simphiweadmin:FJFG585dfhd@easetruckdb.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000");
     console.log("MongoDB connected");
   } catch (err) {
     console.error("Error connecting to MongoDB:", err.message);
