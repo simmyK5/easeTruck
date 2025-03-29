@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 //const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
 //wss://easetruckbackend-emfbc9dje7hdargb.southafricanorth-01.azurewebsites.net
 
-const socket = io("https://easetruckbackend-emfbc9dje7hdargb.southafricanorth-01.azurewebsites.net", {
+const socket = io("https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net", {
   withCredentials: true,
   transports: ["websocket", "polling"]
 });

@@ -13,7 +13,7 @@ const router = express();
 
 console.log("see process",process.env.EASETRUCK)
 router.use(cors({
-  origin: 'https://mango-stone-06f8be210.6.azurestaticapps.net'
+  origin: 'https://agreeable-coast-0b6c27e10.6.azurestaticapps.net/'
 }));
 router.use(express.json());
 router.use(fileUpload({

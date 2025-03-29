@@ -51,7 +51,7 @@ app.use(helmet.contentSecurityPolicy({
     scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "*"],
     styleSrc: ["'self'", "'unsafe-inline'", "*"],
     imgSrc: ["'self'", "data:", "*"],
-    connectSrc: ["'self'", "https://api.emailjs.com", "https://easetruckbackend-emfbc9dje7hdargb.southafricanorth-01.azurewebsites.net", "ws://easetruckbackend-emfbc9dje7hdargb.southafricanorth-01.azurewebsites.net","https://mango-stone-06f8be210.6.azurestaticapps.net", "https://dev-28osh5shw2xy15j3.us.auth0.com"],
+    connectSrc: ["'self'", "https://api.emailjs.com", "https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net", "ws://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net","https://agreeable-coast-0b6c27e10.6.azurestaticapps.net", "https://dev-28osh5shw2xy15j3.us.auth0.com"],
     fontSrc: ["'self'", "*"],
     objectSrc: ["'none'"],
     formAction: ["'self'"],
@@ -62,7 +62,7 @@ app.use(helmet.contentSecurityPolicy({
 
 
 // Configure CORS to allow only specific origins
-const allowedOrigins = ["https://mango-stone-06f8be210.6.azurestaticapps.net"];
+const allowedOrigins = ["https://agreeable-coast-0b6c27e10.6.azurestaticapps.net"];
 
 app.use(
   cors({
@@ -75,7 +75,7 @@ app.use(
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin:"https://mango-stone-06f8be210.6.azurestaticapps.net",
+    origin:"https://https://agreeable-coast-0b6c27e10.6.azurestaticapps.net",
     methods: ["GET", "POST"],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cache-Control'],
     transports: ["websocket", "polling"],
@@ -107,7 +107,7 @@ io.on("connection", (socket) => {
 
 async function connectMongoDB() {
   try {
-    await mongoose.connect("mongodb+srv://simphiweadmin:FJFG585dfhd@easetruckdb.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000");
+    await mongoose.connect("mongodb+srv://simphiweadmin:<password>@easetruckdb.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000");
     console.log("MongoDB connected");
   } catch (err) {
     console.error("Error connecting to MongoDB:", err.message);
