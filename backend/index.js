@@ -43,6 +43,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 // Example CSP headers to restrict loading of resources
 app.use(helmet.contentSecurityPolicy({
   directives: {
