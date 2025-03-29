@@ -71,4 +71,3 @@ jobs:
           app-name: 'easeTruckBackend'
           slot-name: 'Production'
           package: .
-          
