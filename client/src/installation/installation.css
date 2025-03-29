@@ -1,0 +1,85 @@
+html, body { 
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fafafa;
+    font-size: 18px; /* Increase base font size */
+}
+
+.shopping-cart-container {
+    padding: 40px; /* Increase padding */
+    margin-top: 40px; /* Increase top margin */
+    background-color: #f0f0f0;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.products-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 40px; /* Increase padding */
+    width: 90%;
+    margin: 0 auto;
+}
+
+.product-item {
+    display: flex;
+    justify-content: center;
+    width: 45%;
+}
+
+.product-paper {
+    padding: 20px; /* Increase padding */
+    text-align: center;
+    background-color: #e0e0e0;
+    width: 100%;
+    font-size: 1.2em; /* Increase font size */
+}
+
+.section-divider {
+    margin: 40px 0; /* Increase margin */
+}
+
+.order-summary {
+    margin-top: 40px; /* Increase top margin */
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Increase bottom margin */
+    position: relative;
+}
+
+.quantity-controls {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    right: 0;
+}
+
+.quantity-text {
+    margin: 0 20px; /* Increase margin */
+    font-size: 1.2em; /* Increase font size */
+}
+
+.item-divider {
+    margin-top: 20px; /* Increase top margin */
+}
+
+.checkout-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px; /* Increase top margin */
+}
+
+button {
+    font-size: 1.2em; /* Increase button font size */
+    padding: 10px 20px; /* Increase button padding */
+}

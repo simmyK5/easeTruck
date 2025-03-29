@@ -1,0 +1,27 @@
+.formContainer{
+    margin-top: 50px;
+    max-width: 600px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.formTitle{
+    text-align: center;
+    color: #333;
+    font-weight: 600;
+}
+.form{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.inputField{
+    background-color: #fff;
+}
+.submitButton{
+    align-self: center;
+    background-color: #048324;
+    color: #fff;
+}

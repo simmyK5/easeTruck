@@ -1,0 +1,70 @@
+/* VehicleOwnerHomePage.css */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-size: 18px; /* Increase base font size */
+    overflow: hidden; /* Prevent scrolling on the body */
+    display: flex;
+    flex-direction: column;
+    background-color: #e0e0e0; /* Set the background to grey */
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100vh;
+}
+
+.content-container {
+    display: flex;
+    flex-grow: 1;
+    margin-top: 64px; /* Adjusted for fixed AppBar */
+    overflow: hidden; /* Prevent scrolling on the body */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.left-section {
+    flex: 2; /* Main content area takes 2/3 of the space */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable scrolling within this section */
+    margin-right: 20px;
+    background-color: #fff; /* White background for contrast */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.right-section {
+    flex: 1; /* Activity section takes 1/3 of the space */
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable scrolling within this section */
+    background-color: #fff; /* White background for contrast */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.notification-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.welcome-section {
+    margin-bottom: 20px;
+}
+
+.dashboard-section {
+    margin-bottom: 20px;
+}
+
+.download-button {
+    font-size: 1em; /* Decrease the font size */
+    padding: 6px 12px; /* Reduce the padding for a smaller button */
+    min-width: 120px; /* Limit the width */
+}

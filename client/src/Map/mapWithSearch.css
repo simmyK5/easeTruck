@@ -1,0 +1,43 @@
+/* Ensure the body and html take full height */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Container for the entire layout */
+div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  box-sizing: border-box; /* Ensure padding does not affect the overall size */
+}
+
+/* Styling the info section */
+.info {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 15px; /* Space between the info and the map */
+  overflow: hidden; /* Ensure content does not overflow */
+  color: #333;
+  text-align: left; /* Align text to the left */
+  background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
+  padding: 10px;
+  border-radius: 5px; /* Rounded corners for the info box */
+}
+
+/* Map container styling */
+.map-container {
+  flex-grow: 1; /* Allow the map to take remaining space */
+  width: 100%;  /* Full width */
+  height: calc(100vh - 60px); /* Full height minus the height of the navbar */
+  margin-top: 20%; /* Push the map down by 20% */
+  border-radius: 10px; /* Optional: rounded corners for the map container */
+  overflow: hidden; /* Ensure content does not overflow */
+}
+
+/* Optional: Adjust map controls position */
+.mapboxgl-ctrl-top-right {
+  z-index: 1; /* Ensure controls are above other content */
+}

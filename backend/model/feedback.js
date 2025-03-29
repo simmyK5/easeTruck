@@ -1,0 +1,63 @@
+const mongoose = require("mongoose")
+const FeedbackSchema = new mongoose.Schema({
+    fullname:{
+        type:String,
+        require:true
+    },
+    email:{
+        type:String,
+        require:true
+    },
+    subject:{
+        type:String,
+        require:true
+    },
+    description:{
+        type:String,
+        require:true
+    },
+    overallExperience:{
+        type:String
+    },
+    overallExperienceInfo:{
+        type:String
+    },
+    usability:{
+        type:String
+    },
+    usabilityInfo:{
+        type:String
+    },
+    performance:{
+        type:String
+    },
+    performanceInfo:{
+        type:String
+    },
+    design:{
+        type:String
+    },
+    designInfo:{
+        type:String
+    },
+    features:{
+        type:String
+    },
+    featuresInfo:{
+        type:String
+    },
+    support:{
+        type:String
+    },
+    supportInfo:{
+        type:String
+    },
+    status:{
+        type:String,
+        max:500
+    },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+},
+    { timestamps: true }
+)
+module.exports = mongoose.model("Feedback", FeedbackSchema)

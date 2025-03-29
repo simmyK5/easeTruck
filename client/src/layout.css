@@ -1,0 +1,15 @@
+.logo-container {
+    position: absolute;
+    top: 10px; /* Adjust as needed */
+    right: 10px; /* Adjust as needed */
+    width: 40px; /* Adjust as needed */
+    height: 40px; /* Adjust as needed */
+    overflow: hidden; /* Ensure anything outside the container is hidden */
+  }
+  
+  .logo-container svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Maintain aspect ratio */
+  }
+  

@@ -1,0 +1,83 @@
+/* Reset some default styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f0f0;
+}
+
+/* Ensure the main container fills the entire viewport height */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* The content container is flex and should fill the remaining space */
+.content-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0; /* Remove any min-height that forces excess space */
+    padding-bottom: 0; /* Ensure no excessive padding at the bottom */
+}
+
+/* Common styles for left and right sections */
+.left-section, .right-section {
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    flex-grow: 1; /* Ensure these sections expand and fill the space equally */
+    
+}
+
+/* Left section should take more space */
+.left-section {
+    flex: 2;
+    margin-right: 0; /* Adjust margin to avoid extra space between columns */
+}
+
+/* Right section should take less space */
+.right-section {
+    flex: 1;
+    margin-left: 0; /* Adjust margin to avoid extra space between columns */
+}
+
+/* Welcome section margin adjustments */
+.welcome-section, .dashboard-section, .notification-section {
+    margin-bottom: 20px;
+}
+
+/* Adjustments for form and buttons */
+.dashboard-form {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.dashboard-form .MuiFormControl-root {
+    flex: 1;
+    margin-right: 20px;
+}
+
+.download-button {
+    white-space: nowrap;
+}
+
+.notification-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Ensure containers inside right section do not overlap */
+.right-section > .MuiContainer-root {
+    margin-bottom: 20px;
+}
+

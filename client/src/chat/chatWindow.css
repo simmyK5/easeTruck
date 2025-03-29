@@ -1,0 +1,56 @@
+.dialog {
+    max-width: 800px;
+    margin: auto;
+  }
+  
+  .dialogTitle {
+    background-color: #3f51b5;
+    color: white;
+  }
+  
+  .tabContent {
+    padding: 16px;
+  }
+  
+  .videoContainer {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+  }
+  
+  .videoPaper {
+    padding: 10px;
+  }
+  
+  .endCallButton {
+    margin-top: 16px;
+  }
+  
+  .chatBox {
+    padding: 16px;
+    width: 100%;
+  }
+  
+  .messageList {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  
+  .sendButton {
+    margin-top: 8px;
+  }
+  
+  .addUserBox {
+    display: flex;
+    margin-bottom: 16px;
+  }
+  
+  .noteDialog {
+    min-width: 400px;
+  }
+  
+  .breakdownBox {
+    padding: 16px;
+    width: 100%;
+  }
+  

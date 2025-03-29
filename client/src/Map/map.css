@@ -1,0 +1,18 @@
+/* Map.css */
+
+/* Ensure the HTML and body elements fill the screen */
+html, body {
+    height: 100%;
+    margin: 0;
+    width: 100%; /* Full width */
+    overflow: hidden; /* Prevent horizontal scrollbar */
+  }
+  
+  .map-container {
+    height: 100vh; /* Full viewport height */
+    width: 100vw; /* Full viewport width */
+    position: absolute; /* Make sure the container takes up the full width and height */
+    top: 0;
+    left: 0;
+  }
+  
