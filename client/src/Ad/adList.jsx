@@ -171,7 +171,7 @@ const ItemList = ({ navigateToCategory }) => {
                                         <CardMedia
                                             component="img"
                                             height="140"
-                                            src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${encodeURIComponent(item.imagePath.split('/').pop())}`} 
+                                            src="https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net/uploads/20250329185258170_OIP%20(1).jpg"
 
                                             alt={item.title}
                                         />
