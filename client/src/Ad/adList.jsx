@@ -82,7 +82,7 @@ const ItemList = ({ navigateToCategory }) => {
     };
 
     const handleViewAll = (category) => {
-        setViewingCategory(category);
+        setViewingCategory(category); 
     };
 
     useEffect(() => {
@@ -104,7 +104,7 @@ const ItemList = ({ navigateToCategory }) => {
     }, [searchQuery, selectedCategories, items]);
 
     console.log("see filtered items", filteredItems)
-    console.log("record me", `${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`)
+    console.log("record me",`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`)
 
     return (
         <Box className="container">
@@ -116,13 +116,13 @@ const ItemList = ({ navigateToCategory }) => {
                     fullWidth
                     value={searchQuery}
                     onChange={handleSearchChange}
-
+                    
                 />
 
                 <Button
                     variant="contained"
                     onClick={handleCategoryClick}
-
+                   
                 >
                     {selectedCategories.length > 0
                         ? `Selected (${selectedCategories.length})`
@@ -171,7 +171,8 @@ const ItemList = ({ navigateToCategory }) => {
                                         <CardMedia
                                             component="img"
                                             height="140"
-                                            src={`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`}
+                                            src={`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`} 
+
                                             alt={item.title}
                                         />
                                         <CardContent>
