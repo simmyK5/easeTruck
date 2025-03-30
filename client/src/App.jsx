@@ -72,7 +72,7 @@ const App = () => {
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://dev-28osh5shw2xy15j3.us.auth0.com https://cdn.jsdelivr.net https://unpkg.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com https://www.paypal.com/sdk/js;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-      img-src 'self' data: *;
+      img-src 'self' data: https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net;
       connect-src 'self' https://api.emailjs.com https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net ws://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net https://dev-28osh5shw2xy15j3.us.auth0.com https://www.paypal.com https://www.sandbox.paypal.com https://api.paypal.com https://api.sandbox.paypal.com https://api.sightengine.com/1.0/check.json;
       font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net;
       object-src 'none';
