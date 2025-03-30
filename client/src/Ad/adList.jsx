@@ -175,6 +175,8 @@ const ItemList = ({ navigateToCategory }) => {
 
                                             alt={item.title}
                                         />
+                                        {console.log("all good",`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`)}
+
                                         <CardContent>
                                             <Typography variant="h6" noWrap>
                                                 {item.title}
