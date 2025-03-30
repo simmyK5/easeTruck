@@ -163,12 +163,13 @@ app.use((req, res, next) => {
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'build')));
 
-app.use("/uploads", (req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "https://agreeable-coast-0b6c27e10.6.azurestaticapps.net"); // Allow all origins or specify frontend
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  next();
-}, express.static(path.join(__dirname, "route/uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "route/uploads"), {
+  setHeaders: (res, path) => {
+    res.setHeader("Access-Control-Allow-Origin", "https://agreeable-coast-0b6c27e10.6.azurestaticapps.net");
+    res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  }
+}));
 
 app.use("/backend/user", userRoute);
 app.use("/backend/auth", authRoute);
