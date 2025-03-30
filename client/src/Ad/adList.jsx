@@ -170,7 +170,8 @@ const ItemList = ({ navigateToCategory }) => {
                                         <CardMedia
                                             component="img"
                                             height="140"
-                                            image="`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`" 
+                                            image={`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`} 
+
                                             alt={item.title}
                                         />
                                         <CardContent>
