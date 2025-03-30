@@ -171,11 +171,11 @@ const ItemList = ({ navigateToCategory }) => {
                                         <CardMedia
                                             component="img"
                                             height="140"
-                                            src={`${import.meta.env.VITE_API_BASE_URL}${encodeURIComponent(item.imagePath)}`} 
+                                            src={`${import.meta.env.VITE_API_BASE_URL}/uploads/${encodeURIComponent(item.imagePath.split('/').pop())}`} 
 
                                             alt={item.title}
                                         />
-                                        {console.log("all good",`${import.meta.env.VITE_API_BASE_URL}${encodeURIComponent(item.imagePath)}`)}
+                                        {console.log("all good",`${import.meta.env.VITE_API_BASE_URL}/uploads/${encodeURIComponent(item.imagePath.split('/').pop())}`)}
 
                                         <CardContent>
                                             <Typography variant="h6" noWrap>
