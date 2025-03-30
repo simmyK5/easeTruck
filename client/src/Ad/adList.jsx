@@ -104,7 +104,7 @@ const ItemList = ({ navigateToCategory }) => {
     }, [searchQuery, selectedCategories, items]);
 
     console.log("see filtered items", filteredItems)
-    console.log("record me",`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`)
+    //console.log("record me",`${import.meta.env.VITE_API_BASE_URL}${item.imagePath}`)
 
     return (
         <Box className="container">
