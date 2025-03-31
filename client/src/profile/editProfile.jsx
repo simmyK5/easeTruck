@@ -22,7 +22,7 @@ import TermsAndConditions from './termsAndCondition';
 
 
 export default function EditProfile() {
-  const { user, getIdTokenClaims, getAccessTokenSilently , logout} = useAuth0();
+  const { user, getIdTokenClaims, getAccessTokenSilently, logout } = useAuth0();
   const [profileData, setProfileData] = useState({
     firstName: '',
     lastName: '',
@@ -98,7 +98,7 @@ export default function EditProfile() {
       alert('Please subscribe to a plan before saving your profile.');
       return;
     }
-    console.log("what data are we submitting",data)
+    console.log("what data are we submitting", data)
 
     if (!agreedToTandC) {
       alert('Please agrree to terms and conditions before saving your profile.');
@@ -171,7 +171,7 @@ export default function EditProfile() {
   };
 
 
-  
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -188,7 +188,7 @@ export default function EditProfile() {
   useEffect(() => {
     console.log("Updated profileData:", profileData);
   }, [profileData]);
-  
+
 
   const handleOpenTandC = () => {
     setOpenTandC(true);
@@ -355,17 +355,24 @@ export default function EditProfile() {
               />
             )}
           />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={profileData.isLive}
-                onChange={handleChange}
-                name="isLive"
-                color="primary"
-                data-testid="isLive"
+          <Controller
+            name="isLive"
+            control={control}
+            defaultValue={profileData.isLive}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    {...field}
+                    checked={field.value} // Ensure it reflects state
+                    onChange={(e) => field.onChange(e.target.checked)} // Update the state properly
+                    color="primary"
+                    data-testid="isLive"
+                  />
+                }
+                label="Is Live"
               />
-            }
-            label="Is Live"
+            )}
           />
           <FormControl component="fieldset" margin="normal">
             <FormLabel component="legend">User Role</FormLabel>
