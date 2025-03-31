@@ -98,7 +98,7 @@ export default function EditProfile() {
       alert('Please subscribe to a plan before saving your profile.');
       return;
     }
-    console.log(data)
+    console.log("what data are we submitting",data)
 
     if (!agreedToTandC) {
       alert('Please agrree to terms and conditions before saving your profile.');
