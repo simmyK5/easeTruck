@@ -174,6 +174,7 @@ export default function EditProfile() {
   
 
   const handleChange = (e) => {
+    console.log("do we even get here")
     const { name, value, type, checked } = e.target;
     setProfileData((prevData) => ({
       ...prevData,

@@ -154,6 +154,7 @@ export default function Login() {
             { title: 'Easy way to manage trucks', text: 'Provides an easy way to manage trucks and their relevant information.' },
             { title: 'Track driver’s driving', text: 'Track the driver and reward them based on their driving.' },
             { title: 'Promotes fuel efficiency', text: 'Reduce fuel consumption by managing factors increasing fuel usage.' },
+            { title: 'Enhances safety', text: 'Detecting dangers automatically.' },
           ].map((card, index) => (
             <Grid item xs={12} md={4} key={index}>
               <Card
