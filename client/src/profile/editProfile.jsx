@@ -174,8 +174,8 @@ export default function EditProfile() {
   
 
   const handleChange = (e) => {
-    console.log("do we even get here")
     const { name, value, type, checked } = e.target;
+    console.log(`Field Changed: ${name}, New Value: ${type === 'checkbox' ? checked : value}`);
     setProfileData((prevData) => ({
       ...prevData,
       [name]: type === 'checkbox' ? checked : value,
@@ -184,6 +184,11 @@ export default function EditProfile() {
       setSelectedRole(value);
     }
   };
+
+  useEffect(() => {
+    console.log("Updated profileData:", profileData);
+  }, [profileData]);
+  
 
   const handleOpenTandC = () => {
     setOpenTandC(true);
