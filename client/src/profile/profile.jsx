@@ -151,7 +151,7 @@ console.log("war",profileData)
           } else if (userRole === 'mechanic') {
             navigate('/mechanic-home', { state: { currentUsername } });
           } else if (userRole === 'adPublisher') {
-            navigate('/adPubliserHomePage', { state: { currentUsername } });
+            navigate('/adPublisherHomePage', { state: { currentUsername } });
           } else {
             navigate('/profile');  // Fallback to profile if role is unrecognized
           }
