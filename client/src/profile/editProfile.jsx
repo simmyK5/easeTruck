@@ -160,7 +160,10 @@ export default function EditProfile() {
           navigate('/driverHomePage', { state: { currentUsername } });
         } else if (userRole === 'mechanic') {
           navigate('/mechanic-home', { state: { currentUsername } });
-        } else {
+        }  else if (userRole === 'adPublisher') {
+          navigate('/adPublisherHomePage', { state: { currentUsername } })
+        }
+        else {
           navigate('/profile');
         }
       } catch (error) {
