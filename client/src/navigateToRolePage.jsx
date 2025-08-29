@@ -8,6 +8,7 @@ export const navigateToRolePage = async (userRole, userName, navigate) => {
     adPublisher: '/adPublisherHomePage',
     technician: '/technicianHomePage',
     admin: '/adminHomePage',
+    superAdmin: '/adminHomePage',
   };
 
   const path = roleToPathMap[userRole] || '/profile';

@@ -55,136 +55,46 @@ const authenticateTokenService = async (token) => {
     throw new Error('Invalid token');
   }
 };
-
 router.post("/register", async (req, res) => {
-
-  const { email, password, firstName = '', lastName = '' } = req.body; // Default to empty string if not provided
-  console.log("register", req.body)
-
+  const { email, password, firstName = '', lastName = '' } = req.body;
 
   try {
-    let user = await User.findOne({ email: email.toLowerCase() });
-    if (!user) {
-      user = new User({
-        email: email.toLowerCase(), firstName, lastName, isLive: false, driverPool: false, termsAndConditions: false, vehicleOwnerId: '', userRole: ''
-      });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+
+    // If user already exists, don't try to re-register — just respond.
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" }); // 409 Conflict
     }
 
-    // Hash the password
-    bcrypt.genSalt(saltRounds, (err, salt) => {
-      if (err) {
-        return res.status(500).send('Error generating salt');
-      }
-      //console.log("road to millionare one")
-      bcrypt.hash(password, salt, async (err, hashedPassword) => {
-        if (err) {
-          console.log(err)
-          return res.status(500).send('Error hashing password');
-        }
+    // Hash the password and save new user
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Save the user with the hashed password
-        user.password = hashedPassword;
-        await user.save();
-
-        // Create JWT token
-        const payload = {
-          user: { id: user.id },
-        };
-
-        // const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-        const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ token });
-      });
+    const newUser = new User({
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      firstName,
+      lastName,
+      isLive: false,
+      driverPool: false,
+      termsAndConditions: false,
+      vehicleOwnerId: '',
+      userRole: ''
     });
-  } catch (err) {
-    console.error(err.message);
 
+    await newUser.save();
+
+    // Create JWT token
+    const token = jwt.sign({ email: newUser.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.status(200).json({ token });
+  } catch (err) {
+    console.error("Registration error:", err.message);
     res.status(500).send('Server error');
   }
 });
 
 
-/*router.post("/register", async (req, res) => {
-  const { email, password, firstName, lastName } = req.body;
-
-  console.log("Request body received:", req.body);
-
-  if (!password) {
-    return res.status(400).send('Password is required');
-  }
-
-  try {
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({ email, firstName, lastName, isLive: false, vehicleOwnerId: null });
-    }
-
-    // Generate salt
-    const salt = await bcrypt.genSalt(saltRounds);
-
-    // Hash the password with the salt
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // Save the user with the hashed password
-    user.password = hashedPassword;
-    await user.save();
-
-    // Create JWT token
-    const payload = {
-      user: { id: user.id },
-    };
-
-    const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-    res.status(200).json({ token });
-  } catch (err) {
-    console.error('Server error:', err.message);
-    res.status(500).send('Server error');
-  }
-});*/
-
-/*router.post("/register", async (req, res) => {
-
-  const { email, password, firstName, lastName } = req.body;
-
-
-  try {
-    let user = await User.findOne({ email });
-    if (!user) {
-      user = new User({ email, firstName, lastName, isLive: false ,vehicleOwnerId:null});
-    }
-
-    // Hash the password
-    bcrypt.genSalt(saltRounds, (err, salt) => {
-      if (err) {
-        return res.status(500).send('Error generating salt');
-      }
-      //console.log("road to millionare one")
-      bcrypt.hash(password, salt, async (err, hashedPassword) => {
-        if (err) {
-          console.log(err)
-          return res.status(500).send('Error hashing password');
-        }
-
-        // Save the user with the hashed password
-        user.password = hashedPassword;
-        await user.save();
-
-        // Create JWT token
-        const payload = {
-          user: { id: user.id },
-        };
-
-        // const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-        const token = jwt.sign({ email: user.email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ token });
-      });
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});*/
 
 
 // Login
@@ -237,6 +147,12 @@ router.get('/users/:email', async (req, res) => {
   }
 });
 
+router.get('/userExists/:email', async (req, res) => {
+  const user = await User.findOne({ email: req.params.email });
+  res.json({ exists: !!user });
+});
+
+
 //get sunscription of user of 
 router.get("/subscription/:email", async (req, res) => {
   try {
@@ -265,26 +181,12 @@ router.get("/subscription/:email", async (req, res) => {
 
 })
 
-// Update user by email
-/*router.put('/users/:email', async (req, res) => {
-  console.log("what's haping")
-  console.log(req.body)
-  try {
-    const user = await User.findOneAndUpdate({ email: req.params.email }, req.body, { new: true });
-
-    res.status(200).send(user);
-    //res.status(200)
-    
-  } catch (err) {
-    res.status(500).send('Server error');
-  }
-});*/
 
 router.put("/users/:email", async (req, res) => {
   try {
-   /* console.log("Updating profile for:", req.params.email);
-    console.log("Received body:", req.body);
-    console.log("Received files:", req.files);*/
+    /* console.log("Updating profile for:", req.params.email);
+     console.log("Received body:", req.body);
+     console.log("Received files:", req.files);*/
 
     let updateData = { ...req.body };
 
@@ -317,27 +219,7 @@ router.put("/users/:email", async (req, res) => {
   }
 });
 
-/*
-async function getManagementToken() {
-  try {
-    console.log("Requesting token from Auth0...");
-    console.log("AUTH0_DOMAIN:", process.env.AUTH0_DOMAIN);
-    console.log("AUTH0_CLIENT_ID:", process.env.AUTH0_CLIENT_ID);
-    
-    const response = await axios.post(`https://${process.env.AUTH0_DOMAIN}/oauth/token`, {
-      client_id: process.env.AUTH0_CLIENT_ID,
-      client_secret: process.env.AUTH0_CLIENT_SECRET,
-      audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
-      grant_type: "client_credentials",
-    });
 
-    console.log("Token received:", response.data);
-    return response.data.access_token;
-  } catch (error) {
-    console.error("Failed to get Auth0 token:", error.response?.data || error.message);
-  }
-}
-*/
 
 async function getAccessToken() {
   const clientID = process.env.AUTH0_CLIENT_ID
@@ -423,34 +305,7 @@ router.put("/updateAutho", async (req, res) => {
   }
 });
 
-  
-  
 
-
-/*
-router.put("/updateAutho", async (req, res) => {
-  try {
-    console.log("ngihappy", req.params)
-    console.log("ngihappy body", req.body)
-    const { email, userId, token } = req.body;
-    if (!email || !userId) {
-      return res.status(400).json({ message: "Missing email or userId" });
-    }
-
-    console.log("get managementt", token)
-
-    await axios.patch(
-      `https://${process.env.AUTH0_DOMAIN}/api/v2/users/${userId}`,
-      { email },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    res.json({ message: "Email updated successfully" });
-  } catch (error) {
-    console.error("Auth0 Email Update Error:", error.response?.data || error.message);
-    res.status(500).json({ message: "Failed to update email" });
-  }
-});*/
 
 
 
@@ -485,34 +340,9 @@ router.get('/check-status/:email', async (req, res) => {
 });
 
 
-/*router.get('/check-status/:email', async (req, res) => {
-  
-  try {
-    //const user = await User.findOne({ email: req.params.email });
-    const user = await User.findOne({ email: req.params.email }).populate('subscription').exec();
-
-
-    if (!user) {
-      return res.status(404).send('User not found');
-    }
-
-    
-    // Filter brakes data within the date range
-    const filteredUser = user.subscription.filter(subscription => {
-     
-  
-      //return task.timestamp >= startDate && task.timestamp <= endDate;
-      return subscription && subscription.status === 'ACTIVE';
-    });
-    res.status(200).json(filteredUser);
-  } catch (error) {
-    console.error('Error checking subscription status:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});*/
-
 router.get('/user-role/:email', async (req, res) => {
   const { email } = req.params;
+  console.log("yinin bo", email)
 
   try {
     // Find the user by email
@@ -521,7 +351,7 @@ router.get('/user-role/:email', async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    console.log(user)
+    console.log("yazini maa",user)
 
     // Return the user role
     res.json({ role: user.userRole, name: user.firstName });

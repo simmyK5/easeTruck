@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { DataGrid } from '@mui/x-data-grid';
+import React, { useState, useEffect, useCallback } from 'react';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import axios from 'axios';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography, Box, FormControlLabel, Checkbox } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import './breakDownList.css';
+import { useAuth0 } from '@auth0/auth0-react';
+import { VisibilityOutlined } from "@mui/icons-material";
 
 const BreakDownList = () => {
     const [rows, setRows] = useState([]);
@@ -17,12 +19,51 @@ const BreakDownList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
-    const { userId } = location.state || {};
+    const { user } = useAuth0();
+    const [userId, setUserId] = useState([]);
+
+
+    const fetchUserDetails = async (email) => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/users/${email}`);
+            console.log("sigade umzila", response);
+            return response.data._id; // Return the userId instead of setting it here
+        } catch (error) {
+            console.error('Error fetching items:', error);
+            return null;
+        }
+    };
+    
+    const fetchItems = useCallback(async () => {
+        try {
+            const id = await fetchUserDetails(user.email); // Get userId from response
+            console.log("see id",id)
+            if (id) {
+                setUserId(id); // Now set userId in state
+                return id;      // And return it for chaining
+            }
+        } catch (error) {
+            console.error('Error starting conversation:', error);
+        }
+    }, [user]);
+    
 
     useEffect(() => {
-        fetchBreakDowns();
-        fetchTechnicians();
+        const fetchAll = async () => {
+            try {
+                const id = await fetchItems();      // Fetch user and get ID
+                if (id) {
+                    await fetchBreakDowns(id);      // Pass it directly
+                    await fetchTechnicians();       // Run next
+                }
+            } catch (error) {
+                console.error('Error in fetch chain:', error);
+            }
+        };
+    
+        fetchAll();
     }, []);
+    
 
     useEffect(() => {
         setFilteredRows(
@@ -45,14 +86,20 @@ const BreakDownList = () => {
         }
     }, [searchQuery]);
 
-    const fetchBreakDowns = async () => {
+    const fetchBreakDowns = async (userId) => {
+        if (!userId) {
+            console.warn('userId is not defined yet. Skipping fetchBreakDowns.');
+            return;
+        }
+    
         try {
-            const response = await axios.get('${import.meta.env.VITE_API_BASE_URL}/backend/message/breakDown', {
-                params: { userId }
-            });
-
+            console.log("umenzi", userId);
+            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/note/${userId}`);
+            console.log("kumandi", response);
+    
             const breakDowns = await Promise.all(response.data.map(async breakDown => {
                 let senderDetails = null;
+    
                 if (breakDown.senderId) {
                     try {
                         const senderResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/${breakDown.senderId}`);
@@ -61,19 +108,20 @@ const BreakDownList = () => {
                         console.error(`Error fetching technician ${breakDown.senderId}:`, techError);
                     }
                 }
-
+    
                 return {
                     ...breakDown,
-                    id: breakDown.noteId,  // Use noteId as the unique id
+                    id: breakDown.noteId,
                     senders: senderDetails ? `${senderDetails.firstName} ${senderDetails.lastName}` : 'N/A'
                 };
             }));
-
+    
             setRows(breakDowns);
         } catch (error) {
             console.error('Error fetching items:', error);
         }
     };
+    
 
     const fetchTechnicians = async () => {
         try {
@@ -122,6 +170,8 @@ const BreakDownList = () => {
     };
 
     const handleEdit = (id) => {
+        console.log("see what",id)
+        console.log("see what rows",rows)
         const item = rows.find((row) => row.id === id);
         setFormData(item);
         setIsEditing(true);
@@ -131,11 +181,31 @@ const BreakDownList = () => {
     const columns = [
         { field: 'note', headerName: 'Note', width: 500, editable: true },
         { field: 'numberPlate', headerName: 'Number Plate', width: 150, editable: true },
-        { field: 'breakdown', headerName: 'Breakdown', type: 'boolean', width: 100, editable: true },
-        { field: 'timestamp', headerName: 'Timestamp', width: 250, editable: true },
-        { field: 'senders', headerName: 'Sender', width: 250 }
+        { field: 'breakdown', headerName: 'Breakdown', type: 'boolean', width: 140, editable: true },
+        { field: 'timestamp', headerName: 'Timestamp', width: 200, editable: true },
+        { field: 'senders', headerName: 'Sender', width: 200 },
+        {
+                    field: "actions", headerName: "Actions", width: 150,
+                    renderCell: (params) => (
+                        <>
+                            <GridActionsCellItem
+                                icon={<VisibilityOutlined />}
+                                label="View"
+                                onClick={() => handleEdit(params.row.id)}
+                                data-testid="viewBtn"
+                            />
+                        </>
+        
+                    ),
+                },
     ];
 
+    /*   const handleView = (id) => {
+           const item = rows.find((row) => row._id === id._id);
+           setFormData(item);
+           setOpen(true);
+       };
+   */
     return (
         <>
             <div className="breakDown-list-container">
@@ -175,15 +245,19 @@ const BreakDownList = () => {
                                 onChange={handleChange}
                                 className="text-field"
                                 data-testid="noteId"
+                                disabled
                             />
                             <TextField
                                 label="Note"
                                 name="note"
                                 type="text"
+                                multiline
+                                rows={5}
                                 value={formData.note}
                                 onChange={handleChange}
                                 className="text-field"
                                 data-testid="note"
+                                disabled
                             />
                             <TextField
                                 label="Number Plate"
@@ -193,6 +267,7 @@ const BreakDownList = () => {
                                 onChange={handleChange}
                                 className="text-field"
                                 data-testid="numberPlate"
+                                disabled
                             />
 
 

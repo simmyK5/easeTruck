@@ -135,7 +135,7 @@ router.get('/numberPlate', async (req, res) => {
 
 router.get("/:userid", async (req, res) => {
   const currentVehicleOwner = req.params.userid
-  console.log(currentVehicleOwner)
+  console.log("fela", currentVehicleOwner)
 
   try {
     const trucks = await Truck.find({ vehicleOwner: currentVehicleOwner });
@@ -160,7 +160,76 @@ router.get("/getTrucks/:truckId", async (req, res) => {
   }
 })
 
-router.get('/serviceSummaries/:userid', async (req, res) => {
+router.get("/getDriver/:serialNumber", async (req, res) => {
+  const serialNumber = req.params.serialNumber
+
+  try {
+    //const trucks = await Truck.findOne({ serialNumber: serialNumber }).exec();
+    const trucks = await Truck.find({ serialNumber: serialNumber })
+      .populate({
+        path: 'driver',
+      })
+      .exec();
+    console.log("FUTHI")
+    console.log(trucks)
+
+    let allFilteredTrucks = [];
+
+    // Iterate through all users to filter acceleration data
+    trucks.forEach(truck => {
+      if (truck.driver && Array.isArray(truck.drive) && truck.drive > 0) {
+
+        // Add the filtered data to the result array
+        allFilteredTrucks = truck.driver
+      }
+    });
+    return res.status(200).json(allFilteredTrucks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
+
+
+// GET /backend/truck/getDriversByOwner?vehicleOwnerId=...
+/*router.get("/getDriversByOwner", async (req, res) => {
+  try {
+    const drivers = await Truck.find({ vehicleOwnerId: req.query.vehicleOwnerId });
+    res.json(drivers);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to get drivers' });
+  }
+});*/
+
+
+router.get("/getDriversByOwner/:vehicleOwnerId", async (req, res) => {
+  const vehicleOwnerId = req.params.vehicleOwnerId;
+
+  try {
+    const trucks = await Truck.find({ vehicleOwner: vehicleOwnerId })
+      .populate('driver')
+      .exec();
+
+    const result = [];
+
+    trucks.forEach(truck => {
+      if (truck.driver) {
+        result.push({
+          driver: truck.driver,
+          serialNumber: truck.serialNumber
+        });
+      }
+    });
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("Error fetching drivers and serials:", err);
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+
+/*router.get('/serviceSummaries/:userid', async (req, res) => {
   const currentVehicleOwner = req.params.userid;
   console.log("Fetching service summaries for Vehicle Owner ID:", currentVehicleOwner);
 
@@ -186,8 +255,6 @@ router.get('/serviceSummaries/:userid', async (req, res) => {
       truck.serviceDue.forEach(service => {
         serviceDetails.push({
           id: service._id,
-          lastServiceDate: new Date(service.lastServiceDate).toLocaleDateString(), // Ensure valid date handling
-          nextServiceDate: new Date(service.nextServiceDate).toLocaleDateString(),
           mileage: service.mileage,
           truck: service.truck,
         });
@@ -199,6 +266,60 @@ router.get('/serviceSummaries/:userid', async (req, res) => {
   } catch (err) {
     console.error('Error fetching service summaries:', err);
     return res.status(500).json({ message: 'Server error' });
+  }
+});*/
+
+router.get('/serviceSummaries/:userId', async (req, res) => {
+
+
+  try {
+    // Fetch trucks without trying to limit/populate serviceDue
+    const trucks = await Truck.find({ vehicleOwner: req.params.userId }).populate(["driver", "vehicleOwner", "serviceDue"]).exec();
+
+    if (!trucks || trucks.length === 0) {
+      return res.status(404).send("User not found or no trucks available");
+    }
+
+    const dueTrucks = [];
+
+    for (const truck of trucks) {
+      const { numberPlate, make, model, year, driver, vehicleOwner } = truck;
+
+      if (
+        (!vehicleOwner?.firstName || !vehicleOwner?.lastName) &&
+        (!driver?.firstName || !driver?.lastName)
+      ) {
+        console.log(`Missing user data for truck ${truck._id}`);
+        continue;
+      }
+
+      const serviceDueArray = truck.serviceDue || [];
+
+
+      for (const service of serviceDueArray) {
+        console.log("sandi ", service.mileage)
+        dueTrucks.push({
+          numberPlate,
+          make,
+          model,
+          year,
+          mileage: service.mileage,
+          id: service._id,
+          driverName: `${driver?.firstName || ''} ${driver?.lastName || ''}`.trim(),
+        });
+      }
+    }
+
+
+    if (dueTrucks.length === 0) {
+      return res.status(204).send(); // No content
+    }
+
+    res.status(200).json(dueTrucks);
+
+  } catch (err) {
+    console.error("Error fetching service data:", err);
+    res.status(500).send("Server error");
   }
 });
 

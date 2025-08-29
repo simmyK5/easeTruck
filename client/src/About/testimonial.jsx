@@ -26,30 +26,37 @@ const Testimonial = () => {
     }, []); // Empty dependency array ensures it only runs once
     return (
         <Box sx={{ width: "100%", maxWidth: 600, mx: "auto", mt: 4 }}>
-            <Swiper
-                modules={[Pagination, Autoplay]}
-                pagination={{ clickable: true }}
-                autoplay={{ delay: 3000 }}
-                loop={true}
-                spaceBetween={30}
-            >
-                {testimonials.map((testimonial, index) => (
-                    <SwiperSlide key={index}>
-                        <Paper elevation={3} sx={{ p: 4, textAlign: "center", borderRadius: 2 }}>
-                            <Typography variant="h6" fontWeight="bold">
-                                {testimonial.fullname}
-                            </Typography>
-                            <Typography variant="subtitle2" color="text.secondary">
-                                {testimonial.role}
-                            </Typography>
-                            <Typography variant="body1" mt={2} fontStyle="italic">
-                                "{testimonial.description}"
-                            </Typography>
-                        </Paper>
-                    </SwiperSlide>
-                ))}
-            </Swiper>
-        </Box>
+    {testimonials.length === 0 ? (
+        <Typography variant="h6" align="center" color="text.secondary">
+            No testimony yet
+        </Typography>
+    ) : (
+        <Swiper
+            modules={[Pagination, Autoplay]}
+            pagination={{ clickable: true }}
+            autoplay={{ delay: 3000 }}
+            loop={true}
+            spaceBetween={30}
+        >
+            {testimonials.map((testimonial, index) => (
+                <SwiperSlide key={index}>
+                    <Paper elevation={3} sx={{ p: 4, textAlign: "center", borderRadius: 2 }}>
+                        <Typography variant="h6" fontWeight="bold">
+                            {testimonial.fullname}
+                        </Typography>
+                        <Typography variant="subtitle2" color="text.secondary">
+                            {testimonial.role}
+                        </Typography>
+                        <Typography variant="body1" mt={2} fontStyle="italic">
+                            "{testimonial.description}"
+                        </Typography>
+                    </Paper>
+                </SwiperSlide>
+            ))}
+        </Swiper>
+    )}
+</Box>
+
     );
 };
 

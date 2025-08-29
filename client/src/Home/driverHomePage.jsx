@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import {Typography,  Button,  Container, Select, MenuItem, FormControl, InputLabel, Grid } from '@mui/material';
+import { Typography, Button, Container, Select, MenuItem, FormControl, InputLabel, Grid } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -12,6 +12,9 @@ import RecentActivity from '../recentActivity/recentActivity';
 import ServiceCalender from '../recentActivity/serviceCalender';
 import NotificationAlert from '../notification/notificationAlert';
 import './driverHomePage.css'
+import Ad from '../Ad/ad';
+import RecentClaimConfirmation from '../recentActivity/recentClaimConfirmation';
+import SecurityAlertGraph from '../Dashboard/securityAlertGraph';
 
 
 const DriverHomePage = () => {
@@ -42,14 +45,12 @@ const DriverHomePage = () => {
             console.error('Error fetching user details:', error);
         }
     };
-    const handleDownload = () => {
-        // Implement your download logic here
-    };
+
     const goToNotifications = () => {
         console.log(isAuthenticated)
         if (isAuthenticated) {
-           // navigate("/allNotifications", userDetails.id); // Navigate to the notifications page
-           navigate('/allNotifications', { state: { userId: userDetails._id } });
+            // navigate("/allNotifications", userDetails.id); // Navigate to the notifications page
+            navigate('/allNotifications', { state: { userId: userDetails._id } });
         } else {
             navigate("/"); // Redirect to home if not authenticated
         }
@@ -65,44 +66,31 @@ const DriverHomePage = () => {
                         <Typography variant="body1" paragraph>
                             This is the homepage of the Streamlined Trucking app. Here you can manage your fleet, track shipments, and more.
                         </Typography>
+                        <Ad />
                     </Container>
 
 
 
                     <Container className="dashboard-section">
                         <Typography variant="h4" gutterBottom>Real-Time Dashboard</Typography>
-                        <div className="dashboard-form">
-                            <FormControl fullWidth data-testid="periodFormControl">
-                                <InputLabel>Period</InputLabel>
-                                <Select value={period} onChange={(e) => setPeriod(e.target.value)} data-testid="periodSelect">
-                                    <MenuItem value="today" data-testid="periodToday">Today</MenuItem>
-                                    <MenuItem value="week" data-testid="periodWeek">This Week</MenuItem>
-                                    <MenuItem value="month" data-testid="periodMonth">This Month</MenuItem>
-                                    <MenuItem value="4months" data-testid="periodFourMonth">Last 4 Months</MenuItem>
-                                    <MenuItem value="year" data-testid="periodYear">This Year</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button variant="contained" color="primary" onClick={handleDownload} className="download-button" data-testid="downloadBtn">
-                                Download Report
-                            </Button>
-                        </div>
-
-
                         {userDetails && period && (
                             <Grid container spacing={3} style={{ width: '100%' }}>
-                            <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                <AccelerationGraph userId={userDetails._id} period={period} />
+                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                                    <AccelerationGraph userId={userDetails._id} userRole={userDetails.userRole} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                                    <HighSpeed userId={userDetails._id} userRole={userDetails.userRole} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                                    <IdleTimeGraph userId={userDetails._id} userRole={userDetails.userRole} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                                    <SecurityAlertGraph userId={userDetails._id} userRole={userDetails.userRole} />
+                                </Grid>
+                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                                    <LoadNumGraph userId={userDetails._id} userRole={userDetails.userRole} />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                <FuelGraph userId={userDetails._id} period={period} />
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                <IdleTimeGraph userId={userDetails._id} period={period} />
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                <LoadNumGraph userId={userDetails._id} period={period} />
-                            </Grid>
-                        </Grid>
                         )}
                     </Container>
                 </div>
@@ -117,6 +105,7 @@ const DriverHomePage = () => {
                     <Container>
                         {userDetails && <ServiceCalender userId={userDetails._id} />}
                         {userDetails && <RecentActivity userId={userDetails._id} />}
+
 
                     </Container>
                 </div>

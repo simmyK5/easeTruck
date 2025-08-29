@@ -1,10 +1,16 @@
 import { useId } from 'react';
 import { io } from 'socket.io-client';
+import ringtoneAudio from '../ringtone/7120-download-iphone-6-original-ringtone-42676.mp3';
 
 //const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
 //wss://easetruckbackend-emfbc9dje7hdargb.southafricanorth-01.azurewebsites.net
-
+/*
 const socket = io("https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net", {
+  withCredentials: true,
+  transports: ["websocket", "polling"]
+});*/
+
+const socket = io("http://localhost:8800", {
   withCredentials: true,
   transports: ["websocket", "polling"]
 });
@@ -20,12 +26,15 @@ export const joinRoom = (userId, recipientId) => {
   socket.emit('joinRoom', { userId, recipientId });
 };
 
+
 export const startConversation = (userIds, handleChatId) => {
+  
   socket.emit('startConversation', { userIds });
 
   // Listening for the conversationStarted event from the backend
   socket.on('conversationStarted', (data) => {
     const { chatId } = data;
+
 
     // Call the callback to pass chatId to the component
     if (handleChatId && typeof handleChatId === 'function') {
@@ -33,6 +42,15 @@ export const startConversation = (userIds, handleChatId) => {
     }
   });
 };
+
+export const onConversationStarted = (callback) => {
+  socket.on('conversationStarted', callback);
+};
+
+export const offConversationStarted = (callback) => {
+  socket.off('conversationStarted', callback);
+};
+
 
 export const joinGroup = (groupId) => {
   socket.emit('join-group', groupId);
@@ -67,11 +85,17 @@ export const listenForLocationUpdates = (callback) => {
     console.error('Error fetching messages:', error);
   });
 };
+export const onMessageReceived = (callback) => {
+  socket.on('messageReceived', callback);
+};
+
+export const offMessageReceived = (callback) => {
+  socket.off('messageReceived', callback);
+};
 
 
 
-
-export const sendMessage = (chatId, senderId, content, participants) => {
+export const sendMessage = (chatId,senderId, content, participants) => {
   socket.emit('sendMessage', { chatId, senderId, content, participants });
 };
 
@@ -110,6 +134,103 @@ socket.on('newMessage', (message) => {
   // Handle receiving a new message, update the UI accordingly
   console.log('New message received:', message);
 });
+
+export const getPuncher = (role, vehicleOwnerId, callback) => {
+  console.log("kilungile",role)
+  console.log("vehicleOwnerId",vehicleOwnerId)
+  socket.emit('getPuncher', { role, vehicleOwnerId }, callback);
+};
+
+export const getGlassBreak = (role, vehicleOwnerId, callback) => {
+  socket.emit('getGlassBreak', { role, vehicleOwnerId }, callback);
+};
+
+export const getAdminLocation = (callback) => {
+  socket.on('adminLocationUpdate', (data) => {
+    console.log("[Frontend] Received admin location:", data);
+    callback(data);
+  });
+};
+
+/*export const getAdminHighSpeed = (callback) => {
+  socket.on('adminHighSpeed', (data) => {
+    console.log("[Frontend] Received admin speed:", data);
+    callback(data);
+  });
+};*/
+/*xport const getAdminLocation = (data) => {
+  console.log("shap fede",data)
+  socket.emit('locationUpdate', data);
+};*/
+
+
+export const getWeapon = (role, vehicleOwnerId, callback) => {
+  socket.emit('getWeapon', { role, vehicleOwnerId }, callback);
+};
+
+export const getPeople = (role, vehicleOwnerId, callback) => {
+  socket.emit('getPeople', { role, vehicleOwnerId }, callback);
+};
+
+// socketService.js
+
+/*
+export const adminNotification = (userRole, callback) => {
+  socket.on('adminNotification', ({ title, message }) => {
+    if (userRole === 'admin' || userRole === 'superAdmin') {
+      new Audio(ringtoneAudio).play();
+      alert(`${title}\n${message}`);
+      callback?.({ title, message });
+    }
+  });
+};
+
+export const stopNotificationSound = () => {
+    audioInstance.pause();
+    audioInstance.currentTime = 0;
+};*/
+
+
+let currentAudio = null;                
+let isNotificationActive = false;    
+
+
+export const adminNotification = (userRole, callback) => {
+  socket.on('adminNotification', ({ title, message, id }) => {
+    if (userRole === 'admin' || userRole === 'superAdmin' || userRole === 'vehicleOwner') {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+
+      isNotificationActive = true;
+
+      // 🔔 Play new sound
+      currentAudio = new Audio(ringtoneAudio);
+      currentAudio.play();
+
+      // 🧠 Callback or trigger UI
+      callback?.({ title, message, id });
+    }
+  });
+};
+
+export const dismissCurrentNotification = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+
+  isNotificationActive = false;
+};
+
+
+
+
+
+
+
 
 // Add user to the current chat
 export const addUserToChat = (chatId, newUser) => {

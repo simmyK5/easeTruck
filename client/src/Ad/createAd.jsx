@@ -10,13 +10,13 @@ import { useForm, Controller, useWatch } from 'react-hook-form';  // Import reac
 const CreateAd = () => {
   const { user } = useAuth0();
   const [paymentSuccessful, setPaymentSuccessful] = useState(false);
-  const [totalAmount, setTotalAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [userDetail, setUserDetails] = useState({ email: '' });
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageName, setImageName] = useState("");
-
+  const today = new Date().toISOString().split('T')[0];
 
   const { control, handleSubmit, formState: { errors }, setValue, reset } = useForm();
   const options = ['Transportation Opportunity', 'Logistic Event', 'Truck', 'Head', 'Tailor'];
@@ -43,102 +43,56 @@ const CreateAd = () => {
     }
   };
 
-  const handleAdSubmit = async (data) => {
-    if (!selectedImage) {
-      alert('Please select an image for the ad.');
-      return;
-    }
-
-    const form = new FormData();
-    form.append('file', selectedImage);
-    form.append('title', data.title);
-    form.append('content', data.content);
-    form.append('linkUrl', data.linkUrl);
-    form.append('startDate', data.startDate);
-    form.append('endDate', data.endDate);
-    form.append('active', true);
-    form.append('adType', data.adType);
-
-    try {
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/backend/ad/create-order`, form);
-      alert('Ad submitted successfully!');
-
-    } catch (error) {
-      console.error('Error submitting ad:', error);
-      alert('Failed to submit ad.');
-    }
+  const handleCheckout = async (data) => {
+    if (!totalAmount) return alert('Please enter valid dates');
+    if (!selectedImage) return alert('Please select an image');
+  
+    // 1. Upload image first
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+    const uploadResp = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/backend/ad/upload-image`, formData);
+    const { filename } = uploadResp.data;
+  
+    // 2. Prepare ad meta
+    const adMeta = {
+      title: data.title,
+      description: data.content,
+      linkUrl: data.linkUrl,
+      adType: data.adType,
+      startDate: data.startDate,
+      endDate: data.endDate,
+      totalAmount: totalAmount,
+    };
+  
+    // 3. Redirect to PayFast
+    const url = new URL('https://sandbox.payfast.co.za/eng/process');
+    url.searchParams.append('merchant_id', import.meta.env.VITE_PAYFAST_MERCHANT_ID);
+    url.searchParams.append('merchant_key', import.meta.env.VITE_PAYFAST_MERCHANT_KEY);
+    url.searchParams.append('amount', totalAmount);
+    url.searchParams.append('item_name', data.title);
+    url.searchParams.append('item_description', data.content);
+    url.searchParams.append('custom_str1', user.email);
+    url.searchParams.append('custom_str2', JSON.stringify(adMeta));
+    url.searchParams.append('custom_str3', filename);
+    url.searchParams.append('return_url', import.meta.env.VITE_PAYFAST_AD_RETURN_URL);
+    url.searchParams.append('cancel_url', import.meta.env.VITE_PAYFAST_AD_CANCEL_URL);
+    url.searchParams.append('notify_url', import.meta.env.VITE_PAYFAST_AD_NOTIFY_URL);
+  
+    window.location.href = url.toString();
   };
+  
 
-  const onPaymentSuccess = () => {
-    setPaymentSuccessful(true);
-    handleAdSubmit(); // Submit the ad after successful payment
-    setValue('title', '');
-    setValue('content', '');
-    setValue('linkUrl', '');
-    setValue('startDate', '');
-    setValue('endDate', '');
-    setValue('adType', '');
-    setValue('image', null);
-
-
-  };
-
-  const onPaymentError = (message) => {
-    alert(message);
-  };
-
-  const handleCheckout = (data) => {
-    const itemsArray = [
-      {
-        name: data.title,
-        unit_amount: { currency_code: 'USD', value: totalAmount.toFixed(2) },
-        quantity: '1',
-        description: data.content,
-        link: data.linkUrl,
-        start_date: data.startDate,
-        end_date: data.endDate,
-        ad_type: data.adType,
-        active: true
-      }
-    ];
-    setItems(itemsArray);
-    setIsPaymentModalOpen(true);
-    console.log("Checkout items:", itemsArray);
-  };
   const startDate = useWatch({ control, name: "startDate" });
   const endDate = useWatch({ control, name: "endDate" });
 
   useEffect(() => {
     if (startDate && endDate) {
-      const months = calculateMonthsDifference(startDate, endDate);
-      setTotalAmount(months * 5000);
+      const months = Math.max(1, calculateMonthsDifference(startDate, endDate));
+      setTotalAmount(Number((months * 500.00).toFixed(2)));
+
     }
   }, [startDate, endDate]);  // Now we're using actual values, not function calls
 
-
-
-  const clearForm = () => {
-    reset({
-      title: '',
-      content: '',
-      linkUrl: '',
-      startDate: '',
-      endDate: '',
-      adType: '',
-      image: null, // Clear file input in form
-
-    });
-
-    // Manually reset the file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Clear file input manually
-    }
-
-    // Clear selected image and other state variables
-    setSelectedImage(null);
-    setTotalAmount(0);
-    setItems([]);
-  };
   const checkImage = async (file) => {
     console.log(import.meta.env.VITE_SIGHTENGINE_API_USER)
     console.log(import.meta.env.VITE_SIGHTENGINE_API_SECRET)
@@ -162,7 +116,7 @@ const CreateAd = () => {
       console.log("Response:", response.data);
 
       if (response.data.nudity && response.data.nudity.raw > 0.7) {
-        alert("❌ NSFW content detected! Upload blocked.");
+        alert(" NSFW content detected! Upload blocked.");
         return false;
       }
       return true;
@@ -186,6 +140,8 @@ const CreateAd = () => {
     }
   };
 
+
+
   return (
     <Container className='formContainer'>
       <Typography variant="h4" gutterBottom className='formTitle'>
@@ -199,7 +155,11 @@ const CreateAd = () => {
             control={control}
             defaultValue=""
             rules={{
-              required: 'Title is required'
+              required: 'Title is required',
+              pattern: {
+                value: /^[A-Za-z\s]+$/,
+                message: 'Title must contain only letters'
+              }
             }}
             render={({ field }) => (
               <TextField
@@ -213,6 +173,7 @@ const CreateAd = () => {
               />
             )}
           />
+
           <Controller
             name="content"
             control={control}
@@ -232,11 +193,18 @@ const CreateAd = () => {
               />
             )}
           />
+
           <Controller
             name="linkUrl"
             control={control}
             defaultValue=""
-            rules={{ required: 'Link URL is required' }}
+            rules={{
+              required: 'Link URL is required',
+              pattern: {
+                value: /^https?:\/\/[\w.-]+(?:\.[\w\.-]+)+(?:[\w\-._~:/?#[\]@!$&'()*+,;=.]+)?$/,
+                message: 'Enter a valid URL (http:// or https://)'
+              }
+            }}
             render={({ field }) => (
               <TextField
                 {...field}
@@ -298,12 +266,14 @@ const CreateAd = () => {
                 variant="outlined"
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ min: today }}
                 error={!!errors.startDate}
                 helperText={errors.startDate?.message}
                 data-testid="startDate"
               />
             )}
           />
+
           <Controller
             name="endDate"
             control={control}
@@ -317,6 +287,7 @@ const CreateAd = () => {
                 variant="outlined"
                 margin="normal"
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ min: today }}
                 error={!!errors.endDate}
                 helperText={errors.endDate?.message}
                 data-testid="endDate"
@@ -345,27 +316,23 @@ const CreateAd = () => {
               </TextField>
             )}
           />
-          <Typography variant="h6" gutterBottom className='formTitle' data-testid="totalAmount">
-            Total Amount: R{totalAmount.toFixed(2)}
+
+          <Typography variant="body" gutterBottom className='formTitle' data-testid="totalAmount">
+            {totalAmount ? `Total Amount: R${totalAmount}` : "Please select valid Start and End Dates"}
           </Typography>
-          <Button variant="contained" color="primary" sx={{ mt: 3 }} type="submit" data-testid="SubmitAd">
+
+
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{ mt: 3 }}
+            type="submit"
+            data-testid="SubmitAd"
+            disabled={!totalAmount || Object.keys(errors).length > 0}
+          >
             Pay and Submit Ad
           </Button>
-          {!paymentSuccessful && totalAmount > 0 && (
-            <PayPalScriptProvider options={{ 'client-id': import.meta.env.VITE_PAYPAL_CLIENT_ID }}>
-              <AdPayment
-                open={isPaymentModalOpen}
-                totalAmount={totalAmount}
-                userEmail={userDetail.email}
-                items={items}
-                selectedImage={selectedImage}
-                onClose={() => setIsPaymentModalOpen(false)}
-                onPaymentSuccess={onPaymentSuccess}
-                onPaymentError={onPaymentError}
-                clearForm={clearForm}
-              />
-            </PayPalScriptProvider>
-          )}
+
         </FormGroup>
       </form>
     </Container>

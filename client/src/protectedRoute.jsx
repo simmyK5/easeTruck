@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Backdrop, 
+  CircularProgress 
+} from '@mui/material';
 
 const ProtectedRoute = ({ element: Element, requiredRole, ...rest }) => {
   const { isAuthenticated, user, getAccessTokenSilently } = useAuth0();
@@ -25,7 +28,7 @@ const ProtectedRoute = ({ element: Element, requiredRole, ...rest }) => {
         console.log("see role", role);
         console.log("see subscriptionId", subscriptionId);
 
-        if (subscriptionStatus === "ACTIVE" || (subscriptionId === "No active subscription" && ["technician", "mechanic", "admin"].includes(role))) {
+        if (subscriptionStatus === "ACTIVE" || (subscriptionId === "No active subscription" && ["technician", "mechanic", "admin","superAdmin"].includes(role))) {
           console.log("see role", role);
         } else{
           navigate('/profile');
@@ -52,7 +55,25 @@ const ProtectedRoute = ({ element: Element, requiredRole, ...rest }) => {
   }, [isAuthenticated, user, getAccessTokenSilently, navigate,requiredRole]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <Backdrop
+        open={true}
+        sx={{
+          color: '#fff',
+          zIndex: 1300,
+          backdropFilter: 'blur(6px)', // applies the blur
+          backgroundColor: 'transparent !important', // forces transparent background
+          '&.MuiBackdrop-root': {
+            backgroundColor: 'transparent !important', // override default background
+          },
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <CircularProgress color="primary" />
+      </Backdrop>
+    );
   }
 
   if (requiredRole === '*') {

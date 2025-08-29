@@ -13,9 +13,9 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import SubscriptionModal from '../subscription/subscription'; // Import the Subscription Modal
 import { useForm, Controller } from 'react-hook-form';
 import TermsAndConditions from './termsAndCondition';
+import Installation from '../installation/installation';
 
 
 export default function Profile() {
@@ -29,9 +29,9 @@ export default function Profile() {
   });
 
   const [selectedRole, setSelectedRole] = useState('');
-  const [selectedPlan, setSelectedPlan] = useState(null); // New state to track selected plan
-  const [openModal, setOpenModal] = useState(false); // To control modal visibility
-  const [isSubscribed, setIsSubscribed] = useState(false); // Track subscription status
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [isInstallationPaid, setIsInstallationPaid] = useState(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [openTandC, setOpenTandC] = useState(false);
   const [agreedToTandC, setAgreedToTandC] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState(null); // Track current subscription
@@ -44,6 +44,12 @@ export default function Profile() {
   } = useForm();
 
   const [subscriptionId, setSubscriptionId] = useState(null);
+  const [selectedInstallation, setSelectedInstallation] = useState(null);
+  const [installationTotalAmount, setInstallationTotalAmount] = useState(null);
+  const [installationInfo, setInstallationInfo] = useState({});
+  const [fullAddress, setFullAddress] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -86,91 +92,6 @@ export default function Profile() {
     }
   };
 
-  const handleOnSubmit = async () => {
-
-
-
-    // Wait for the modal to close and ensure the user has subscribed before proceeding
-    if (!isSubscribed) {
-      alert('Please subscribe to a plan before saving your profile.');
-      return; // Don't proceed with profile update if not subscribed
-    }
-
-    // Wait for the modal to close and ensure the user has subscribed before proceeding
-    if (!agreedToTandC) {
-      alert('Please agrree to terms and conditions before saving your profile.');
-      return; // Don't proceed with profile update if not subscribed
-    }
-
-    try {
-      const token = await getIdTokenClaims();
-
-      // Step 1: Check if the user has an active subscription
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/auth/check-status/${user.email}`, {
-        headers: {
-          Authorization: `Bearer ${token.__raw}`,
-        },
-      });
-      // Step 2: If user doesn't have a subscription, alert them to subscribe
-      if (!response.data) {
-        alert('Please subscribe to a plan before saving your profile.');
-        return; // Don't proceed with profile update
-      }
-
-console.log("war",user.email)
-console.log("war",profileData)
-
-      // Step 3: If subscription is active, proceed to save the profile data
-      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/backend/auth/users/${user.email}`, profileData, {
-        headers: {
-          Authorization: `Bearer ${token.__raw}`,
-        },
-      });
-
-      //const navigateToRolePage = async (userEmail, token) => {
-
-      console.log("see profile", profileData.email)
-      if (profileData.email, token) {
-        try {
-          const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/auth/user-role/${profileData.email}`, {
-            headers: {
-              Authorization: `Bearer ${token.__raw}`
-            },
-          });
-
-          console.log("see me now")
-          console.log(response.data)
-
-          const userRole = response.data.role;
-          const currentUsername = response.data.name;
-
-          if (userRole === 'vehicleOwner') {
-            navigate('/vehicleOwnerHomePage', { state: { currentUsername } });
-          } else if (userRole === 'driver') {
-            navigate('/driverHomePage', { state: { currentUsername } });
-          } else if (userRole === 'mechanic') {
-            navigate('/mechanic-home', { state: { currentUsername } });
-          } else if (userRole === 'adPublisher') {
-            navigate('/adPublisherHomePage', { state: { currentUsername } });
-          } else {
-            navigate('/profile');  // Fallback to profile if role is unrecognized
-          }
-        } catch (error) {
-          console.error('Error fetching user role:', error);
-          navigate('/profile');  // Fallback if there is an error
-        }
-      }
-
-
-
-
-      // Redirect to home after successful profile update
-      //navigate('/home');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      alert('An error occurred while updating your profile.');
-    }
-  };
 
   const handleOpenTandC = () => {
     setOpenTandC(true);
@@ -186,13 +107,12 @@ console.log("war",profileData)
   const handlePlanSelection = (plan) => {
     console.log("ngwana waka", plan)
     setSelectedPlan(plan);
-    setOpenModal(true);
+    if(selectedPlan){
+      handleRedirect();
+    }
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
-
-  };
+  
   const handleSubscriptionIdUpdate = (id) => {
     setSubscriptionId(id); // Update the subscriptionId
     setProfileData((prevData) => ({
@@ -221,16 +141,30 @@ console.log("war",profileData)
   const renderSubscriptionOptions = () => {
     const roleBasedPlans = {
       driver: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId:import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Driver Plan', price: 29.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId: import.meta.env.VITE_DRIVER_PLAN_SUBSCRIPTION },
+        { title: 'Free Plan', price: 0, totalAmount: 0, features: ['Manage invoices', 'View route selection', 'Post advertisements'], description: 'Perfect for professional drivers', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
+        { title: 'Driver Plan', price: 50.00, totalAmount: 50.00, features: ['Manage invoices', 'View route selection', 'Post advertisements'], description: 'Perfect for professional drivers', planId: import.meta.env.VITE_DRIVER_PLAN_SUBSCRIPTION },
       ],
       vehicleOwner: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Vehicle Owner Plan', price: 39.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_VEHICLE_OWNER_PLAN_SUBSCRIPTION },
+        {
+          title: 'Vehicle Owner Plan',
+          price: parseFloat(
+            (
+              selectedInstallation?.subscriptionPrice ?? 39.99
+            ).toFixed(2)
+          ),
+          totalAmount: parseFloat(
+            (
+              installationTotalAmount ?? 39.99
+            ).toFixed(2)
+          ),
+          features: [' Manage trucks', 'track truck locations in real time', 'Receive security alerts'],
+          description: selectedInstallation?.name ?? "vehicle Owner",
+          planId: import.meta.env.VITE_VEHICLE_OWNER_PLAN_SUBSCRIPTION,
+        },
       ],
       adPublisher: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Ad Publisher Plan', price: 39.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_AD_PUBLISHER_PLAN_SUBSCRIPTION },
+        { title: 'Free Plan', price: 0, totalAmount: 0, features: ['Post advertisements', 'View advertisements'], description: 'For advertisers', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
+        { title: 'Ad Publisher Plan', price: 50.00, totalAmount: 50.00, features: ['Post advertisements', 'View advertisements'], description: 'For advertisers', planId: import.meta.env.VITE_AD_PUBLISHER_PLAN_SUBSCRIPTION },
       ],
     };
 
@@ -239,19 +173,103 @@ console.log("war",profileData)
         key={index}
         variant="contained"
         color="primary"
-        onClick={() => handlePlanSelection(plan)} // Open modal on plan click
-        disabled={isSubscribed} // Disable button if already subscribed
+        onClick={() => handlePlanSelection(plan)}
+        disabled={isSubscribed || (selectedRole === 'vehicleOwner' && !selectedInstallation)} // Disable button if no installation selected
         data-testid={`${plan.title.replace(/\s+/g, '-').toLowerCase()}`}
       >
-        {plan.title}
+        {plan.title} - {plan.price}
       </Button>
     ));
+  };
+  console.log("ngimbonile", selectedInstallation)
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const firstName = params.get('firstName');
+    const lastName = params.get('lastName');
+    const termsAndConditions = params.get('termsAndConditions');
+
+    if (firstName || lastName || termsAndConditions) {
+      setProfileData(prev => ({
+        ...prev,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+      }));
+
+      if (termsAndConditions === 'true') {
+        setAgreedToTandC(true);
+      }
+    }
+  }, [location.search]);
+
+  console.log("see me now", agreedToTandC)
+
+  useEffect(() => {
+    // Dynamically load PayFast script if it's not available
+    const script = document.createElement('script');
+    script.src = 'https://www.payfast.co.za/button/subscribe'; // This is an example, check the official SDK URL
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
+
+
+  const handleRedirect = () => {
+    setIsProcessing(true); // Disable the button
+
+    // Create form
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = 'https://sandbox.payfast.co.za/eng/process';
+
+    // Helper to add hidden input
+    const addInput = (name, value) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    };
+
+    // Add required PayFast fields
+    addInput('merchant_id', import.meta.env.VITE_PAYFAST_MERCHANT_ID);
+    addInput('merchant_key', import.meta.env.VITE_PAYFAST_MERCHANT_KEY);
+    addInput('return_url', import.meta.env.VITE_PAYFAST_RETURN_URL);
+    addInput('cancel_url', import.meta.env.VITE_PAYFAST_CANCEL_URL);
+    addInput('notify_url', import.meta.env.VITE_PAYFAST_NOTIFY_URL);
+    addInput('amount', selectedPlan.price);
+    addInput('item_name', selectedPlan.title);
+    addInput('email_address', profileData.email);
+    addInput('subscription_type', '1');
+    addInput('billing_date', new Date().toISOString().split('T')[0]);
+    addInput('recurring_amount', selectedPlan.price);
+    addInput('frequency', '3');
+    addInput('cycles', '0');
+    addInput('name_first', profileData.firstName);
+    addInput('name_last', profileData.lastName);
+    addInput('custom_str1', profileData.userRole);
+    addInput('custom_str2', profileData.termsAndConditions ? 'true' : 'false');
+    addInput('custom_str3', JSON.stringify(installationInfo));
+    addInput('custom_int1', installationTotalAmount);
+    addInput('custom_str4', fullAddress);
+    addInput('custom_str5', installationInfo.outstandingInstallation);
+
+    // Append and submit
+    document.body.appendChild(form);
+    form.submit();
+
+    // Optional: clean up and re-enable
+    setIsProcessing(false);
   };
 
   return (
     <div>
       <Typography variant="h4" gutterBottom>Create Profile</Typography>
-      <form onSubmit={handleSubmit(handleOnSubmit)}>
+      <form onSubmit>
         <FormGroup>
           <Controller
             name="firstName"
@@ -306,6 +324,13 @@ console.log("war",profileData)
             variant="outlined"
             disabled
           />
+
+          <Button variant="contained" onClick={handleOpenTandC}>
+            Read and Agree to Terms and Conditions
+          </Button>
+
+
+
           <FormControl component="fieldset" margin="normal">
             <FormLabel component="legend">User Role</FormLabel>
             <RadioGroup
@@ -314,7 +339,7 @@ console.log("war",profileData)
               onChange={handleChange}
               data-testid="userRole"
             >
-              {["admin", "driver", "vehicleOwner", "adPublisher"].map((role) => (
+              {["driver", "vehicleOwner", "adPublisher"].map((role) => (
                 <FormControlLabel
                   key={role}
                   value={role}
@@ -328,13 +353,27 @@ console.log("war",profileData)
                   disabled={
                     isSubscribed ||
                     !profileData.firstName?.trim() ||
-                    !profileData.lastName?.trim()
+                    !profileData.lastName?.trim() ||
+                    !agreedToTandC
                   } // Disable if subscribed or if first/last name is empty
                 />
               ))}
             </RadioGroup>
           </FormControl>
 
+          {selectedRole === 'vehicleOwner' && (
+            <Installation
+              selectedInstallation={selectedInstallation}
+              setSelectedInstallation={setSelectedInstallation}
+              installationTotalAmount={installationTotalAmount}
+              setInstallationTotalAmount={setInstallationTotalAmount}
+              installationInfo={installationInfo}
+              setInstallationInfo={setInstallationInfo}
+              fullAddress={fullAddress}
+              setFullAddress={setFullAddress}
+              profileData={profileData}
+            />
+          )}
 
           {renderSubscriptionOptions()}
 
@@ -350,26 +389,8 @@ console.log("war",profileData)
             </Button>
           )}
 
-          <Button variant="contained" onClick={handleOpenTandC}>
-            Read and Agree to Terms and Conditions
-          </Button>
-
-          <Button type="submit" variant="contained" color="primary" style={{ marginTop: '16px' }} data-testid="submitBtn" >
-            Save
-          </Button>
         </FormGroup>
       </form>
-
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        open={openModal}
-        plan={selectedPlan}
-        userEmail={user.email}
-        onClose={handleCloseModal}
-        setIsSubscribed={setIsSubscribed} // Pass the state updater
-        setSubscriptionId={handleSubscriptionIdUpdate}
-        profileData={profileData}
-      />
 
       <TermsAndConditions
         open={openTandC}

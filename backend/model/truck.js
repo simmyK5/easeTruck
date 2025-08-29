@@ -34,8 +34,7 @@ const TruckSchema = new mongoose.Schema({
     serialNumber: {
         type: String
     },
-    serviceDue: [{ type: mongoose.Schema.Types.ObjectId, ref: 'serviceDue' }],
-
+    serviceDue: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ServiceDue' }],
     tireService: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tireService' }],
     vehicleOwner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     timestamp: { type: Date, default: Date.now },

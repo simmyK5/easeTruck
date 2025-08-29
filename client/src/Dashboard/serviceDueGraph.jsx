@@ -1,8 +1,8 @@
-import React, { useEffect, useState ,useCallback} from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Grid, Typography, Card, CardContent } from '@mui/material';
 
-const ServiceDueGraph = ({ userId, period }) => {
+const ServiceDueGraph = ({ userId, period, userRole }) => {
     const [serviceData, setServiceData] = useState(null);
 
     // Fetch acceleration data based on userId and period
@@ -11,14 +11,15 @@ const ServiceDueGraph = ({ userId, period }) => {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/dashboard/service`, {
                 params: {
                     userId: userId,
-                    period: period
+                    period: period,
+                    userRole: userRole
                 }
             });
             setServiceData(response.data);
         } catch (error) {
             console.error('Error fetching service data:', error);
         }
-    }, [userId,period]);
+    }, [userId, period]);
 
 
     useEffect(() => {
@@ -27,7 +28,7 @@ const ServiceDueGraph = ({ userId, period }) => {
             console.log(period)
             fetchService();
         }
-    }, [userId, period,fetchService]);
+    }, [userId, period, fetchService]);
 
 
     return (
@@ -90,12 +91,12 @@ const ServiceDueGraph = ({ userId, period }) => {
                         </>
                     ) : (
                         <>
-                        <Typography variant="h6" gutterBottom>
-                            Service Data
-                          </Typography>
-                        <Typography variant="h8" gutterBottom>
-                          No data available
-                        </Typography>
+                            <Typography variant="h6" gutterBottom>
+                                Service Data
+                            </Typography>
+                            <Typography variant="h8" gutterBottom>
+                                No data available
+                            </Typography>
                         </>
                     )}
 

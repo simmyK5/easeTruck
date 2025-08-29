@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        h2 {
+            color: #0073e6;
+        }
+
+        p {
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Hi <%= firstName %> <%= lastName %>,</h2>
+        <p>We hope you're doing well! Just a reminder that your your vehicle is due for service.</p>
+
+        <div class="info">
+            <p><strong>Current mileage:</strong> {{currentKm}} km</p>
+            <p><strong>Current driver:</strong> <%= driverFirstName %> <%= driverLastName %></p>
+        </div>
+
+        <p>Please schedule your service as soon as possible to ensure your vehicle remains in optimal condition.</p>
+        <p>Thank you for choosing us!</p>
+        <p>Best regards,</p>
+        <p><b>EaseTruck</b></p>
+    </div>
+
+</body>
+
+</html>

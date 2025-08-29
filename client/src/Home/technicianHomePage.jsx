@@ -59,33 +59,18 @@ const TechnicianHomePage = () => {
 
                     <Container className="dashboard-section">
                         <Typography variant="h4" gutterBottom>Technician Dashboard</Typography>
-                        <div className="dashboard-form">
-                            <FormControl fullWidth data-testid="periodFormControl">
-                                <InputLabel>Period</InputLabel>
-                                <Select value={period} onChange={(e) => setPeriod(e.target.value)} data-testid="periodSelect">
-                                    <MenuItem value="today" data-testid="periodToday">Today</MenuItem>
-                                    <MenuItem value="week" data-testid="periodWeek">This Week</MenuItem>
-                                    <MenuItem value="month" data-testid="periodMonth">This Month</MenuItem>
-                                    <MenuItem value="4months" data-testid="periodFourMonth">Last 4 Months</MenuItem>
-                                    <MenuItem value="year" data-testid="periodYear">This Year</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button variant="contained" color="primary" onClick={handleDownload} className="download-button" data-testid="downloadBtn">
-                                Download Report
-                            </Button>
-                        </div>
 
 
-                        {userDetails && period && (
+                        {userDetails && (
                             <Grid container direction="column" spacing={3} style={{ width: '100%' }}>
                                 <Grid item xs={12} style={{ height: 600 }}>
-                                    <TechnicianTotalInstallations userId={userDetails._id} period={period} />
+                                    <TechnicianTotalInstallations userId={userDetails._id} userRole={userDetails.userRole} />
                                 </Grid>
                                 <Grid item xs={12} style={{ height: 600 }}>
-                                    <TechnicianInstallationProvince userId={userDetails._id} period={period} />
+                                    <TechnicianInstallationProvince userId={userDetails._id} userRole={userDetails.userRole} />
                                 </Grid>
                                 <Grid item xs={12} style={{ height: 600 }}>
-                                    <TechnicianInstallationType userId={userDetails._id} period={period} />
+                                    <TechnicianInstallationType userId={userDetails._id} userRole={userDetails.userRole}/>
                                 </Grid>
                             </Grid>
                         )}

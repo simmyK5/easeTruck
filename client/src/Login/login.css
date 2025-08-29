@@ -1,92 +1,259 @@
-.login {
-  width: 100vw;
-  height: 100vh;
-  background-color: #f0f2f5;
+.container {
+  padding: 16px;
+  background: linear-gradient(to bottom, #ffffff, #f0f8ff);
+}
+
+.section-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-align: center;
+  color: #0d47a1;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.demoVideo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f0f4f8;
+  padding: 40px 24px;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.celebratory-left {
+  flex: 0 1 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.howItWorks-section {
+  background-image: linear-gradient(to right, rgba(255, 64, 129, 0.5), rgba(33, 150, 243, 0.5)),
+                    var(--howItWorks-bg);
+  background-size: cover;
+  background-position: center;
+  width: 280px;
+  height: 120px;
+  border-radius: 999px; /* makes it an oval */
+  color: white;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
 }
 
-.loginWrapper {
-  width: 70%;
-  height: 70%;
-  display: flex;
+.howItWorks-section:hover {
+  transform: scale(1.02);
 }
 
-.loginLeft,
-.loginRight {
-  flex: 1;
+.demo-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: white;
+  z-index: 2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.floating-icon {
+  position: absolute;
+  font-size: 2.2rem;
+  color: #fff176;
+  opacity: 0.9;
+  z-index: 1;
+  animation: floaty 4s ease-in-out infinite;
+}
+
+.top-left {
+  top: 10px;
+  left: 10px;
+}
+
+.top-right {
+  top: 10px;
+  right: 10px;
+}
+
+.bottom-left {
+  bottom: 10px;
+  left: 10px;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.videoPaper {
+  width: 320px;
+  height: 320px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+  background-color: #000;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+
+.benefitsSection {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 48px 24px;
+  border-radius: 16px;
+  margin-top: 48px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.benefitsSlider {
+  padding: 0 32px;
+}
+
+.benefitCardWrapper {
+  padding: 16px;
+}
+
+.benefitCard {
+  height: 260px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border-radius: 20px;
+  background-color: #ffffff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border-left: 6px solid #2196f3;
 }
 
-.loginLogo {
-  font-size: 50px;
-  font-weight: 800;
-  color: #1775ee;
-  margin-bottom: 10px;
+.benefitCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
-.loginDesc {
-  font-size: 24px;
-}
-
-.loginBox {
-  height: 300px;
-  padding: 20px;
-  background-color: white;
-  border-radius: 10px;
+.answer {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 48px;
   justify-content: space-between;
 }
 
-.loginInput {
-  height: 50px;
-  border-radius: 10px;
-  border: 1px solid gray;
-  font-size: 18px;
-  padding-left: 20px;
+.faqBox {
+  flex: 1 1 30%;
 }
 
-.loginInput:focus {
-  outline: none;
+.accordionBox {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  border-left: 6px solid #ffca28;
 }
 
-.loginButton {
-  height: 50px;
-  border-radius: 10px;
-  border: none;
-  background-color: #1775ee;
-  color: white;
-  font-size: 20px;
-  font-weight: 500;
-  cursor: pointer;
+.accordionBox:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
 }
 
-.loginButton:focus {
-  outline: none;
-}
-
-.loginButton:disabled {
-  cursor: not-allowed;
-}
-
-.loginForgot {
-  text-align: center;
-  color: #1775ee;
-}
-
-.loginRegisterButton {
+.slogan-section {
+  position: relative;
   width: 100%;
-  align-self: center;
-  height: 50px;
-  border-radius: 10px;
-  border: none;
-  background-color: #42b72a;
+  min-height: 600px;/* 👈 Increase this value to your desired height */
+  background-image: var(--slogan-bg);
+  background-size: cover;
+  background-position: center right;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.slogan-content {
+  z-index: 2;
   color: white;
-  font-size: 20px;
-  font-weight: 500;
-  cursor: pointer;
+  max-width: 50%;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.4); /* semi-transparent overlay */
+  border-radius: 1rem;
+}
+
+.slogan-text {
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+.slogan-heading {
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+
+.testimony {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 20px 20px; /* Adds spacing before and after */
+  margin: 60px 0;       /* Optional: Adds outer spacing to separate from other sections */
+  border-radius: 16px;  /* Optional: smooth corners */
+  position: relative;
+  color: white;         /* Ensures content is readable */
+}
+
+.testimonial-content {
+  background-image: var(--testimonial-bg);
+  padding: 20px;
+  border-radius: 12px;
+}
+
+
+.questions a {
+  color:white;
+  font-weight: bold;
+  margin-left: 8px;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.questions a:hover {
+  color: white;
+}
+
+
+.question-section {
+  position: relative;
+  width: 100%;
+  min-height: 300px;
+  background-image: var(--question-bg);
+  background-size: cover;
+  background-position: center right;
+  display: flex;
+  align-items: center;        /* Vertical center */
+  justify-content: center;   /* Horizontal center */
+}
+
+
+.question-content {
+  z-index: 2;
+  color: white;
+  max-width: 50%;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.4); /* semi-transparent overlay */
+  border-radius: 1rem;
+}
+
+.question-text {
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+.question-heading {
+  font-weight: bold;
+  font-size: 1.8rem;
 }

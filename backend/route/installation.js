@@ -4,90 +4,69 @@ const cors = require('cors');
 const paypal = require('@paypal/checkout-server-sdk');
 const Installation = require('../model/installation');
 const User = require('../model/user');
+const crypto = require('crypto');
 
 const router = express();
 const PORT = process.env.PORT || 5000;
 router.use(cors());
 router.use(bodyParser.json());
 
-let environment = new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_CLIENT_SECRET);
-let client = new paypal.core.PayPalHttpClient(environment);
 
-// Generate Client Token
-router.get('/get-client-token', async (req, res) => {
-  try {
-    let request = new paypal.orders.OrdersCreateRequest();
-    request.requestBody({});
 
-    const response = await client.execute(request);
-    res.json({ client_token: response.result.id });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+router.post('/payment/notify', async (req, res) => {
+  console.log("Received IPN notification from PayFast:", req.body);
+
+  const {
+    payment_status,
+    custom_str1, // should be the installation ID
+  } = req.body;
+
+  if (payment_status !== 'COMPLETE') {
+    return res.status(400).json({ error: 'Payment not completed' });
   }
-});
-
-// Create PayPal Order
-router.post('/create-order', async (req, res) => {
-  try {
-    const request = new paypal.orders.OrdersCreateRequest();
-    request.requestBody({
-      intent: 'CAPTURE',
-      purchase_units: [{
-        amount: {
-          currency_code: 'USD',
-          value: req.body.totalAmount,  // Use the calculated total amount
-        },
-      }],
-    });
-
-    const response = await client.execute(request);
-    res.json(response.result);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-
-// Capture Payment
-router.post('/capture-order', async (req, res) => {
-  const { orderID, userEmail } = req.body;  // Make sure this is passed from the frontend after user approves payment
-  console.log("the request body", req.body)
 
   try {
-    console.log(orderID)
-    const request = new paypal.orders.OrdersCaptureRequest(orderID);
-    request.requestBody({});
+    // Update the installation's outstandingInstallation flag to false
+    const updatedInstallation = await Installation.findOneAndUpdate(
+      { _id: custom_str1 },
+      { $set: { outstandingInstallation: false } },
+      { new: true } // returns the updated document
+    );
 
-    const response = await client.execute(request);
-
-    // Here you can save the payment details to your database
-    const user = await User.findOne({ email: userEmail });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!updatedInstallation) {
+      return res.status(404).json({ error: 'Installation not found' });
     }
 
-    const newOrder = new Installation({
-      user: user._id, // Replace with actual user ID
-      totalAmount: req.body.totalAmount, // Pass totalAmount from frontend
-      paymentId: response.result.id,
-      paymentStatus: response.result.status,
-      email: req.body.userEmail,
-      items: req.body.items,
-      status: 'Not Started',
-      technician: null,
-      address: response.result.purchase_units[0]?.shipping?.address || null,
-
-
-    });
-console.log(newOrder)
-    const savedOrder = await newOrder.save();
-    user.installation.push(savedOrder._id);
-    await user.save();
-    res.json(savedOrder);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.json({ message: 'Installation updated successfully', installation: updatedInstallation });
+  } catch (err) {
+    console.error('Error processing IPN:', err);
+    return res.status(500).json({ error: 'Server error while processing IPN' });
   }
+});
+
+
+// PayFast return URL (after successful payment)
+router.get('/success', (req, res) => {
+
+  // You can access query parameters from PayFast here
+  const paymentData = req.query;
+  console.log("Payment data received: ", paymentData);
+
+  // Redirect user to a success page or render the success page
+  
+  res.redirect('http://localhost:3000/profile');
+});
+
+// PayFast cancel URL (when the user cancels payment)
+router.get('/cancel', (req, res) => {
+  console.log("Payment cancelled, returning user to cancel page");
+
+  // You can access query parameters from PayFast here
+  const paymentData = req.query;
+  console.log("Payment data received: ", paymentData);
+
+  // Redirect user to a cancel page or render the cancel page
+  res.redirect('http://localhost:3000/');  // You can customize this to redirect to a frontend route or render HTML
 });
 
 
@@ -106,8 +85,24 @@ router.get("/installations", async (req, res) => {
   }
 })
 
+// get installtions by vehicle owner
 
 
+router.get("/outstandingInstallations/:email", async (req, res) => {
+  console.log("kujola mina",req.params.email)
+
+  try {
+    const installations = await Installation.find({ email: req.params.email, outstandingInstallation: true });
+
+    console.log(installations)
+    if (installations.length === 0) {
+      return res.status(404).json({ message: "No installations found" });
+    }
+    res.json(installations);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+})
 
 //Update installation
 router.put("/:id", async (req, res) => {
@@ -120,6 +115,31 @@ router.put("/:id", async (req, res) => {
     res.status(400).send(error);
   }
 });
+
+router.put("/techInstallation/:id", async (req, res) => {
+  console.log('Request Body:', req.body);
+  
+
+  try {
+    const { status } = req.body; // Only extract `status` from the request
+    console.log('YINI MANJE', status);
+    if (!status) {
+      return res.status(400).json({ error: "Status is required" });
+    }
+
+    const updatedItem = await Installation.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    res.json(updatedItem);
+  } catch (error) {
+    console.error("Update error:", error);
+    res.status(400).send(error);
+  }
+});
+
 
 module.exports = router;
 

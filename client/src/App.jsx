@@ -12,7 +12,6 @@ import DriverTask from './Task/driverTask.jsx';
 import CreateAd from './Ad/createAd.jsx';
 import Ad from './Ad/ad.jsx';
 import AdList from './Ad/adList.jsx';
-import Subscription from './subscription/subscription.jsx';
 import Installation from './installation/installation.jsx';
 import InstPayPal from './installation/instPayPal.jsx';
 import Chat from './chat/chat.jsx';
@@ -51,6 +50,16 @@ import TermsAndConditonsContent from "./profile/termsAndConditonsContent.jsx";
 import AllServiceSummary from "./recentActivity/allServiceSummary.jsx";
 import AboutUs from "./About/aboutUs.jsx";
 import HowItWorks from "./About/howItWorks.jsx";
+import HijackAdmin from './hijack/hijackAdmin.jsx';
+import Hijack from './hijack/hijack.jsx';
+import OutstandingInstallation from './installation/outstandingInstallation.jsx';
+import ConfirmClaim from './voucher/confirmClaim.jsx';
+import PayOut from './Admin/payOut.jsx';
+import AdminLocation from './Map/adminLocation.jsx';
+import AdminHighSpeed from './HighSpeed/adminHighSpeed.jsx';
+import AdminSupport from './Admin/adminSupport.jsx';
+import LeadInfo from './Admin/leadInfo.jsx';
+import HighSpeed from './HighSpeed/highSpeed.jsx';
 
 const App = () => {
   const { isAuthenticated } = useAuth0();
@@ -70,17 +79,18 @@ const App = () => {
           httpEquiv="Content-Security-Policy"
           content={`
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com https://dev-28osh5shw2xy15j3.us.auth0.com https://cdn.jsdelivr.net https://unpkg.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com https://www.paypal.com/sdk/js;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.payfast.co.za/button/subscribe https://cdnjs.cloudflare.com https://dev-28osh5shw2xy15j3.us.auth0.com https://cdn.jsdelivr.net https://unpkg.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com https://www.paypal.com/sdk/js;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
-      img-src 'self' data: https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net;
-      connect-src 'self' https://api.emailjs.com https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net ws://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net https://dev-28osh5shw2xy15j3.us.auth0.com https://www.paypal.com https://www.sandbox.paypal.com https://api.paypal.com https://api.sandbox.paypal.com https://api.sightengine.com/1.0/check.json;
+      img-src 'self' data: http://localhost:8800 https://localhost:8800 https://www.paypalobjects.com ;
+      media-src 'self' http://localhost:8800 https://localhost:8800;
+      connect-src 'self' https://api.emailjs.com https://api.hubapi.com http://localhost:8800 https://51dd-41-116-126-50.ngrok-free.app ws://localhost:8800 https://dev-28osh5shw2xy15j3.us.auth0.com https://www.paypal.com https://www.sandbox.paypal.com https://api.paypal.com https://api.sandbox.paypal.com https://api.sightengine.com/1.0/check.json https://api.mapbox.com https://events.mapbox.com;
       font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net;
       object-src 'none';
-      form-action 'self';
+      form-action 'self' https://sandbox.payfast.co.za;;
       upgrade-insecure-requests;
       frame-ancestors 'self';
       frame-src 'self' https://dev-28osh5shw2xy15j3.us.auth0.com https://www.paypal.com https://www.sandbox.paypal.com https://www.paypalobjects.com;
-      child-src 'self' https://dev-28osh5shw2xy15j3.us.auth0.com;
+      child-src 'self' blob: https://dev-28osh5shw2xy15j3.us.auth0.com;
     `}
         />
       </Helmet>
@@ -89,50 +99,59 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/adminDashboard" element={<ProtectedRoute element={AdminDashboard} requiredRole="admin" />} />
-          <Route path="/adDashboard" element={<ProtectedRoute element={AdDashboard} requiredRole="admin,vehicleOwner,driver,adPublisher" />} />
-          <Route path="/technician" element={<ProtectedRoute element={Technician} requiredRole="admin,technician" />} />
-          <Route path="/adminAd" element={<ProtectedRoute element={AdminAd} requiredRole="admin" />} />
-          <Route path="/driverList" element={<ProtectedRoute element={DriverList} requiredRole="vehicleOwner" />} />
-          <Route path="/driverPool" element={<ProtectedRoute element={DriverPool} requiredRole="vehicleOwner" />} />
-          <Route path="/task" element={<ProtectedRoute element={TaskList} requiredRole="vehicleOwner,driver" />} />
-          <Route path="/driveTask" element={<ProtectedRoute element={DriverTask} requiredRole="driver" />} />
-          <Route path="/createAd" element={<ProtectedRoute element={CreateAd} requiredRole="vehicleOwner,driver,adPublisher" />} />
-          <Route path="/ad" element={<ProtectedRoute element={Ad} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/adList" element={<ProtectedRoute element={AdList} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/subscription" element={<ProtectedRoute element={Subscription} requiredRole="vehicleOwner,driver,adPublisher" />} />
-          <Route path="/installation" element={<ProtectedRoute element={Installation} requiredRole="vehicleOwner,driver,adPublisher" />} />
-          <Route path="/instPayPal" element={<ProtectedRoute element={InstPayPal} requiredRole="vehicleOwner,driver,adPublisher" />} />
-          <Route path="/chat" element={<ProtectedRoute element={Chat} requiredRole="vehicleOwner,driver,mechanic" />} />
-          <Route path="/chatPage" element={<ProtectedRoute element={ChatPage} requiredRole="vehicleOwner,driver,mechanic" />} />
-          <Route path="/chatWindow" element={<ProtectedRoute element={ChatWindow} requiredRole="vehicleOwner,driver,mechanic" />} />
-          <Route path="/chatList" element={<ProtectedRoute element={ChatList} requiredRole="vehicleOwner,driver,mechanic" />} />
-          <Route path="/driverMap" element={<ProtectedRoute element={MapWithSearch} requiredRole="driver" />} />
-          <Route path="/vehicleOwnerMap" element={<ProtectedRoute element={VehicleOwnerMap} requiredRole="vehicleOwner" />} />
-          <Route path="/mechanic" element={<ProtectedRoute element={Mechanic} requiredRole="mechanic,vehicleOwner,driver" />} />
-          <Route path="/truck" element={<ProtectedRoute element={TruckList} requiredRole="vehicleOwner" />} />
-          <Route path="/voucher" element={<ProtectedRoute element={Voucher} requiredRole="vehicleOwner" />} />
-          <Route path="/dashboard" element={<ProtectedRoute element={Dashboard} requiredRole="admin,vehicleOwner,driver,adPublisher" />} />
-          <Route path="/editProfile" element={<ProtectedRoute element={EditProfile} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/adminInstallation" element={<ProtectedRoute element={AdminInstallation} requiredRole="admin" />} />
-          <Route path="/admin" element={<ProtectedRoute element={AdminList} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/vehicleOwnerHomePage" element={<ProtectedRoute element={VehicleOwnerHomePage} requiredRole="vehicleOwner" />} />
-          <Route path="/driverHomePage" element={<ProtectedRoute element={DriverHomePage} requiredRole="driver" />} />
-          <Route path="/adPublisherHomePage" element={<ProtectedRoute element={AdPublisherHomePage} requiredRole="adPublisher" />} />
-          <Route path="/mechanicHomePage" element={<ProtectedRoute element={MechanicHomePage} requiredRole="mechanic" />} />
-          <Route path="/technicianHomePage" element={<ProtectedRoute element={TechnicianHomePage} requiredRole="technician" />} />
-          <Route path="/adminHomePage" element={<ProtectedRoute element={AdminHomePage} requiredRole="admin" />} />
-          <Route path="/notificationAlert" element={<ProtectedRoute element={NotificationAlert} requiredRole="vehicleOwner,driver" />} />
-          <Route path="/allNotifications" element={<ProtectedRoute element={AllNotifications} requiredRole="vehicleOwner,driver" />} />
-          <Route path="/adminFeedback" element={<ProtectedRoute element={AdminFeedback} requiredRole="admin" />} />
-          <Route path="/feedback" element={<ProtectedRoute element={Feedback} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/technicianInstallation" element={<ProtectedRoute element={TechnicianInstallation} requiredRole="technician" />} />
-          <Route path="/breakDownList" element={<ProtectedRoute element={BreakDownList} requiredRole="vehicleOwner,mechanic" />} />
-          <Route path="/adminList" element={<ProtectedRoute element={AdminList} requiredRole="admin" />} />
-          <Route path="/termAndCondtionContent" element={<ProtectedRoute element={TermsAndConditonsContent} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic" />} />
-          <Route path="/allServiceSummary" element={<ProtectedRoute element={AllServiceSummary} requiredRole="vehicleOwner" />} />
+          <Route path="/adminDashboard" element={<ProtectedRoute element={AdminDashboard} requiredRole="admin,superAdmin" />} />
+          <Route path="/adDashboard" element={<ProtectedRoute element={AdDashboard} requiredRole="admin,vehicleOwner,driver,adPublisher,superAdmin" />} />
+          <Route path="/technician" element={<ProtectedRoute element={Technician} requiredRole="admin,technician,superAdmin" />} />
+          <Route path="/adminAd" element={<ProtectedRoute element={AdminAd} requiredRole="admin,superAdmin" />} />
+          <Route path="/driverList" element={<ProtectedRoute element={DriverList} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/driverPool" element={<ProtectedRoute element={DriverPool} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/task" element={<ProtectedRoute element={TaskList} requiredRole="vehicleOwner,driver,superAdmin" />} />
+          <Route path="/driveTask" element={<ProtectedRoute element={DriverTask} requiredRole="driver,superAdmin" />} />
+          <Route path="/createAd" element={<ProtectedRoute element={CreateAd} requiredRole="vehicleOwner,driver,adPublisher,superAdmin" />} />
+          <Route path="/ad" element={<ProtectedRoute element={Ad} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/adList" element={<ProtectedRoute element={AdList} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/installation" element={<ProtectedRoute element={Installation} requiredRole="vehicleOwner,driver,adPublisher,superAdmin" />} />
+          <Route path="/instPayPal" element={<ProtectedRoute element={InstPayPal} requiredRole="vehicleOwner,driver,adPublisher,superAdmin" />} />
+          <Route path="/chat" element={<ProtectedRoute element={Chat} requiredRole="vehicleOwner,driver,mechanic,superAdmin" />} />
+          <Route path="/chatPage" element={<ProtectedRoute element={ChatPage} requiredRole="vehicleOwner,driver,mechanic,superAdmin" />} />
+          <Route path="/chatWindow" element={<ProtectedRoute element={ChatWindow} requiredRole="vehicleOwner,driver,mechanic,superAdmin" />} />
+          <Route path="/chatList" element={<ProtectedRoute element={ChatList} requiredRole="vehicleOwner,driver,mechanic,superAdmin" />} />
+          <Route path="/driverMap" element={<ProtectedRoute element={MapWithSearch} requiredRole="driver,superAdmin" />} />
+          <Route path="/vehicleOwnerMap" element={<ProtectedRoute element={VehicleOwnerMap} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/mechanic" element={<ProtectedRoute element={Mechanic} requiredRole="mechanic,vehicleOwner,driver,superAdmin" />} />
+          <Route path="/truck" element={<ProtectedRoute element={TruckList} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/voucher" element={<ProtectedRoute element={Voucher} requiredRole="*" />} />
+          <Route path="/dashboard" element={<ProtectedRoute element={Dashboard} requiredRole="admin,vehicleOwner,driver,adPublisher,superAdmin" />} />
+          <Route path="/editProfile" element={<ProtectedRoute element={EditProfile} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/adminInstallation" element={<ProtectedRoute element={AdminInstallation} requiredRole="admin,superAdmin" />} />
+          <Route path="/admin" element={<ProtectedRoute element={AdminList} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/vehicleOwnerHomePage" element={<ProtectedRoute element={VehicleOwnerHomePage} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/driverHomePage" element={<ProtectedRoute element={DriverHomePage} requiredRole="driver,superAdmin" />} />
+          <Route path="/adPublisherHomePage" element={<ProtectedRoute element={AdPublisherHomePage} requiredRole="adPublisher,superAdmin" />} />
+          <Route path="/mechanicHomePage" element={<ProtectedRoute element={MechanicHomePage} requiredRole="mechanic,superAdmin" />} />
+          <Route path="/technicianHomePage" element={<ProtectedRoute element={TechnicianHomePage} requiredRole="technician,superAdmin" />} />
+          <Route path="/adminHomePage" element={<ProtectedRoute element={AdminHomePage} requiredRole="admin,superAdmin" />} />
+          <Route path="/notificationAlert" element={<ProtectedRoute element={NotificationAlert} requiredRole="vehicleOwner,driver,superAdmin" />} />
+          <Route path="/allNotifications" element={<ProtectedRoute element={AllNotifications} requiredRole="vehicleOwner,driver,superAdmin" />} />
+          <Route path="/adminFeedback" element={<ProtectedRoute element={AdminFeedback} requiredRole="admin,superAdmin" />} />
+          <Route path="/feedback" element={<ProtectedRoute element={Feedback} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/technicianInstallation" element={<ProtectedRoute element={TechnicianInstallation} requiredRole="technician,superAdmin" />} />
+          <Route path="/breakDownList" element={<ProtectedRoute element={BreakDownList} requiredRole="vehicleOwner,mechanic,superAdmin" />} />
+          <Route path="/adminList" element={<ProtectedRoute element={AdminList} requiredRole="admin,superAdmin" />} />
+          <Route path="/termAndCondtionContent" element={<ProtectedRoute element={TermsAndConditonsContent} requiredRole="admin,vehicleOwner,driver,adPublisher,technician,mechanic,superAdmin" />} />
+          <Route path="/allServiceSummary" element={<ProtectedRoute element={AllServiceSummary} requiredRole="vehicleOwner,superAdmin" />} />
           <Route path="/aboutUs" element={<ProtectedRoute element={AboutUs} requiredRole="*" />} />
           <Route path="/howItWorks" element={<ProtectedRoute element={HowItWorks} requiredRole="*" />} />
+          <Route path="/confirmClaim" element={<ProtectedRoute element={ConfirmClaim} requiredRole="*" />} />
+          <Route path="/hijackAdmin" element={<ProtectedRoute element={HijackAdmin} requiredRole="admin,superAdmin" />} />
+          <Route path="/payout" element={<ProtectedRoute element={PayOut} requiredRole="admin,superAdmin" />} />
+          <Route path="/adminLocation" element={<ProtectedRoute element={AdminLocation} requiredRole="admin,superAdmin" />} />
+          <Route path="/hijack" element={<ProtectedRoute element={Hijack} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/adminHighSpeed" element={<ProtectedRoute element={AdminHighSpeed} requiredRole="admin,superAdmin" />} />
+          <Route path="/adminSupport" element={<ProtectedRoute element={AdminSupport} requiredRole="admin,superAdmin" />} />
+          <Route path="/leadInfo" element={<ProtectedRoute element={LeadInfo} requiredRole="admin,superAdmin" />} />
+          <Route path="/highSpeed" element={<ProtectedRoute element={AdminHighSpeed} requiredRole="vehicleOwner,superAdmin" />} />
+          <Route path="/outstandingInstallation" element={<ProtectedRoute element={OutstandingInstallation} requiredRole="vehicleOwner,superAdmin" />} />
         </Routes>
       </Layout>
     </AuthProvider>

@@ -1,69 +1,253 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Typography, Grid, Paper } from "@mui/material";
+import {
+    Box, Typography, Paper, Card, CardContent, Grid, IconButton, Accordion,
+    AccordionSummary,
+    AccordionDetails
+} from "@mui/material";
+import Testimonial from "./testimonial";
+import './HowItWorks.css';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
+import { ArrowBackIos, ArrowForwardIos, Star, Celebration, EmojiEvents, EmojiEmotions, WbTwilight } from "@mui/icons-material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import HowItWorksLogo from '../logo/howItWorksLogo';
+import easeTruckOne from '/easeTruckOne.svg';
+import easeTruckTwo from '/easeTruckTwo.svg';
+import easeTruckFive from '/easeTruckFive.svg';
+import easeTruckLogo from '/easeTruckLogo.svg';
+import CelebrationIcon from "@mui/icons-material/Celebration";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import StarsIcon from "@mui/icons-material/Stars";
+
+
 
 const HowItWorks = () => {
     const videoRef = useRef(null);
-    const [progress, setProgress] = useState(0);
 
-    // Define timestamps (in seconds)
-    const timestamps = [
-        { time: 50, label: "Intro" },
-        { time: 200, label: "Step 1: Sign Up" },
-        { time: 400, label: "Step 2: Verification" },
-        { time: 600, label: "Step 3: Dashboard Overview" }
+    const NextArrow = (props) => {
+        const { onClick } = props;
+        return (
+            <IconButton
+                onClick={onClick}
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    right: -50, // outside the box
+                    zIndex: 2,
+                    color: 'black',
+                    transform: 'translateY(-50%)',
+                }}
+            >
+                <ArrowForwardIos />
+            </IconButton>
+        );
+    };
+
+    const PrevArrow = (props) => {
+        const { onClick } = props;
+        return (
+            <IconButton
+                onClick={onClick}
+                sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: -50, // outside the box
+                    zIndex: 2,
+                    color: 'black',
+                    transform: 'translateY(-50%)',
+                }}
+            >
+                <ArrowBackIos />
+            </IconButton>
+        );
+    };
+
+    const benefits = [
+        {
+            title: "Enhanced Security",
+            description: "Detects when you're in danger—ensuring the right team is ready to assist immediately. We know when you're at risk.",
+        },
+        {
+            title: "Employment Opportunities",
+            description: "Creates jobs for drivers and boosts logistics efficiency. Drivers can upload CVs to be easily noticed by employers.",
+        },
+        {
+            title: "Trucking Advertisements",
+            description: "A space for trucking-related content providers and businesses to showcase their services.",
+        },
+        {
+            title: "Effortless Invoice Management",
+            description: "Manage your invoices effortlessly.",
+        },
+        {
+            title: "Optimized Route Selection",
+            description: "Chooses the shortest route to reduce fuel consumption—a major cost for logistics businesses.",
+        },
     ];
 
-    // Update progress bar
-    useEffect(() => {
-        const video = videoRef.current;
-        if (!video) return;
-
-        const updateProgress = () => {
-            setProgress((video.currentTime / video.duration) * 100);
-        };
-
-        video.addEventListener("timeupdate", updateProgress);
-        return () => video.removeEventListener("timeupdate", updateProgress);
-    }, []);
+    const settings = {
+        dots: true,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 2,
+        slidesToScroll: 1,
+        arrows: true,
+        nextArrow: <NextArrow />,
+        prevArrow: <PrevArrow />,
+        responsive: [
+            {
+                breakpoint: 960,
+                settings: {
+                    slidesToShow: 1,
+                },
+            },
+        ],
+    };
 
     return (
-        <Box className="container" sx={{ padding: 2 }}>
-            <Typography variant="h4" align="center" gutterBottom>
-                How it Works
-            </Typography>
-            <Grid container spacing={2}>
-                <Grid item xs={12} md={8}>
-                    <Paper elevation={2} sx={{ position: "relative" }}>
-                        {/* Video */}
-                        <video ref={videoRef} width="100%" controls>
-                            <source src="/signUp.mp4" type="video/mp4" />
-                            Your browser does not support the video tag.
-                        </video>
-                    </Paper>
-                </Grid>
+        <Box className="container">
+            <Box
+                className="slogan-section"
+                style={{ '--slogan-bg': `url(${easeTruckOne})` }}
+            >
+                <Box className="slogan-content">
+                    <Typography className="slogan-heading" variant="h4" >
+                        EaseTruck
+                    </Typography>
+                    <Typography variant="body1" className="slogan-text">
+                        Truck management system that serves as the central hub for overseeing truck operations, enhanced security, and reducing paperwork.
+                    </Typography>
+                </Box>
+            </Box>
 
-                {/* Timestamps Display */}
-                <Grid item xs={12} md={4}>
-                    <Paper
-                        elevation={4} // Increased elevation for a more prominent shadow
-                        sx={{
-                            padding: "16px",
-                            position: "relative", // Ensures it stays in its position while bringing it forward
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.1)", // Custom shadow effect
-                            zIndex: 10, // Makes sure it is above other elements
-                        }}
-                    >
-                        <Typography variant="h6">Timestamps</Typography>
-                        {timestamps.map(({ time, label }) => (
-                            <Typography key={time} variant="body1" sx={{ margin: "8px 0" }}>
-                                {new Date(time * 1000).toISOString().substr(14, 5)} - {label}
-                            </Typography>
+            <Box className="benefitsSection">
+                <Typography className="section-title" variant="h4" align="center" gutterBottom>
+                    The Benefits You Gain
+                </Typography>
+
+                <Box className="benefitsSlider">
+                    <Slider {...settings}>
+                        {benefits.map((benefit, index) => (
+                            <Box key={index} className="benefitCardWrapper">
+                                <Card className="benefitCard" elevation={4}>
+                                    <CardContent>
+                                        <Typography variant="h6" gutterBottom>
+                                            {benefit.title}
+                                        </Typography>
+                                        <Typography variant="body1">
+                                            {benefit.description}
+                                        </Typography>
+                                    </CardContent>
+                                </Card>
+                            </Box>
                         ))}
-                    </Paper>
-                </Grid>
+                    </Slider>
+                </Box>
+            </Box>
 
-            </Grid>
+            <Box className="demoVideo">
+                <Box className="celebratory-left">
+                    <Box
+                        className="howItWorks-section"
+                        style={{ '--howItWorks-bg': `url(${easeTruckFive})` }}
+                    >
+                        <CelebrationIcon className="floating-icon top-left" />
+                        <StarsIcon className="floating-icon top-right" />
+                        <EmojiEventsIcon className="floating-icon bottom-left" />
+                        <Typography className="demo-title" variant="h4" gutterBottom>
+                            How it Works
+                        </Typography>
+
+                    </Box>
+                </Box>
+
+                <Paper elevation={2} className="videoPaper">
+                    <video ref={videoRef} width="100%" controls>
+                        <source src="/signUp.mp4" type="video/mp4" />
+                        Your browser does not support the video tag.
+                    </video>
+                </Paper>
+            </Box>
+
+
+            <Box className="answer">
+                <Box className="faqBox">
+                    <Accordion className="accordionBox">
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="subtitle1">What are our current plans?</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography><strong>Vehicle Owner Plan:</strong> Manage trucks, drivers, invoices, real-time tracking, and more.</Typography>
+                            <Typography mt={2}><strong>Driver Plan:</strong> Manage invoices, receive alerts, and communicate with owners and mechanics.</Typography>
+                            <Typography mt={2}><strong>Ad Publisher Plan:</strong> Post and view advertisements.</Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                </Box>
+
+                <Box className="faqBox">
+                    <Accordion className="accordionBox">
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="subtitle1">How does the invoicing process function?</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography>
+                                Easily manage your invoices by securely storing and accessing them anytime for upload or download.
+                            </Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                </Box>
+
+                <Box className="faqBox">
+                    <Accordion className="accordionBox">
+                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                            <Typography variant="subtitle1">How is the route selected?</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails>
+                            <Typography>
+                                The system selects the shortest and most efficient route to reduce fuel costs.
+                            </Typography>
+                        </AccordionDetails>
+                    </Accordion>
+                </Box>
+            </Box>
+
+            <Box className="testimony">
+                <Typography className="section-title" variant="h4" align="center" gutterBottom>
+                    What Our Clients Say
+                </Typography>
+
+                <Box className="testimonial-content">
+                    <Box className="testimonial-slider">
+                        <Testimonial />
+                    </Box>
+
+                    <Box className="testimonial-logo-wrapper" style={{ '--easeTruckLogo-bg': `url(${easeTruckLogo})` }}>
+                        
+                    </Box>
+                </Box>
+
+            </Box>
+
+            <Box className="questions">
+                <Box
+                    className="question-section"
+                    style={{ '--question-bg': `url(${easeTruckTwo})` }}
+                >
+                    <Box className="question-content">
+                        <Typography className="question-heading" variant="h4" align="center" gutterBottom>
+                            Have question
+                        </Typography>
+                        <Typography className="question-text">Send email: easetruck@info.co.za </Typography>
+                        <Typography className="question-text">Call us: 078 798 2563</Typography>
+
+                    </Box>
+
+                </Box>
+            </Box>
         </Box>
+
+
     );
 };
 

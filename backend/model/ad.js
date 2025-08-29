@@ -4,11 +4,11 @@ const AdSchema = new mongoose.Schema({
         type:String,
         require:true
     },
-    content:{
+    description:{
         type:String,
         require:true
     },
-    imagePath: { type: String, required: true },
+    imagePath: { type: String },
     linkUrl :{
         type:String,
         max:500
@@ -22,6 +22,7 @@ const AdSchema = new mongoose.Schema({
     active:{
         type:Boolean ,
     },
+    status: { type: String, enum: ['PENDING', 'ACTIVE'], default: 'PENDING' },
     adType:{
         type:String,
         require:true

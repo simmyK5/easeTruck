@@ -2,23 +2,15 @@ const express = require('express');
 const User = require('../model/user');
 const Task = require('../model/task');
 const Notification = require('../model/notification');
-
-//const multer = require("multer")
-const fileUpload = require('express-fileupload');
 const path = require('path');
-const cors = require('cors');
+
 require('dotenv').config();
+//const multer = require("multer")
 
-const router = express();
-router.use(cors({
-  origin: process.env.EASETRUCK
-}));
-router.use(express.json());
+const router = express.Router(); // Just router, no use(cors()), etc here
 
 
-router.use(fileUpload());
-router.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
+router.use('/uploadFile', express.static(path.join(__dirname, 'uploads')));
 
 
 //create task
@@ -86,163 +78,8 @@ router.post("/", async (req, res) => {
     }
 });
 
-
-/*router.post("/", async (req, res) => {
-    console.log("see the request body");
-    console.log(req.body);
-
-    const { vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status } = req.body;
-    const newTask = new Task({
-        vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status, onload: '', offload: ''
-    });
-
-    try {
-        const vehicleOwner = await User.findById(vehicleOwnerId);
-        const driver = await User.findById(driverId);
-
-        // Check if both users are found
-        if (!vehicleOwner || !driver) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        console.log("Vehicle Owner:", vehicleOwner);
-        console.log("Driver:", driver);
-
-        // Save the new task
-        const savedTask = await newTask.save();
-
-        // Push the saved task's ID to both users' task arrays
-        vehicleOwner.task.push(savedTask._id);
-        driver.task.push(savedTask._id);
-
-        // Save the updated users with the new task
-        await vehicleOwner.save();
-        await driver.save();
-        
-        console.log("see notifcation ")
-        console.log(vehicleOwner.firstName)
-        console.log(vehicleOwner.lastName)
-
-        const title = `New task created and assigned to you by ${vehicleOwner.firstName} ${vehicleOwner.lastName}  `
-        const message = `New task created: ${description}`;
-
-        const notification = new Notification({
-            Title: title,
-            message
-        });
-        await notification.save();
-
-        vehicleOwner.notification.push(savedTask._id);
-        driver.notification.push(savedTask._id);
-
-        // Respond with the saved task
-        res.status(200).json(savedTask);
-    } catch (error) {
-        console.error('Error saving task:', error);
-        res.status(500).json(error);
-    }
-});
-*/
-
-/*router.post("/", async (req, res) => {
-    console.log("see te request body")
-    console.log(req.body)
-    const { vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status, files } = req.body;
-    const newTask = new Task({
-        vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status,
-        files,onload:'',offload:'' 
-    });
-   
-    try {
-        const user = await User.findOne({ _id: req.body.vehicleOwnerId,  _id: req.body.driverId });
-        /*const savedTask = await newTask.save()
-        res.status(200).json(savedTask)
-
-        const savedTask = await newTask.save();
-        user.task.push(savedTask);
-        user.task.push(savedTask)
-        await user.save();
-        res.status(200).json(savedTruck) 
-    } catch (error) {
-        res.status(401).json(error)
-    }
-});*/
-
-//Update task
-/*router.put("/:id",async (req, res) => {
-    try {
-
-        /*const files = req.files.map(file => ({
-            filename: file.originalname,
-            contentType: file.mimetype,
-            data: file.buffer,
-          }));
-          console.log("see again")
-          console.log(req.body)
-        const { vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status,onload,offload } = req.body;
-        
-        const file = req.files.file ? {
-            filename: req.files.file.name,
-            contentType: req.files.file.mimetype,
-            data: req.files.file.buffer,
-        } : null;
-
-        
-
-        const update = {
-            ...(vehicleOwnerId && { vehicleOwnerId }),
-            ...(driverId && { driverId }),
-            ...(numberPlate && { numberPlate }),
-            ...(startPoint && { startPoint }),
-            ...(endPoint && { endPoint }),
-            ...(status && { status }),
-            ...(onload && { onload }),
-            ...(offload && { offload }),
-            ...(file && { $push: { files: file } }),
-        };
-        const updatedItem = await Task.findByIdAndUpdate(req.params.id, update, { new: true });
-        res.json(updatedItem);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});*/
-
-/*router.put("/:id", async (req, res) => {
-    try {
-        console.log("may I never be a pick me")
-        console.log(req.files.files)
-        const { vehicleOwnerId, driverId, numberPlate, startPoint, endPoint, status, onload, offload } = req.body;
-        const file=null//let file = null;
-        console.log(req.files.files.name)
-
-        if (req.files.files && req.files.files.length>0) {
-            file = {
-                filename: req.files.files.name,
-                contentType: req.files.files.mimetype,
-                data: req.files.files.data
-            };
-        }
-        console.log(file)
-
-        const update = {
-            ...(vehicleOwnerId && { vehicleOwnerId }),
-            ...(driverId && { driverId }),
-            ...(numberPlate && { numberPlate }),
-            ...(startPoint && { startPoint }),
-            ...(endPoint && { endPoint }),
-            ...(status && { status }),
-            ...(onload && { onload }),
-            ...(offload && { offload }),
-            ...(file && { $push: { files: file } }),
-        };
-
-        const updatedItem = await Task.findByIdAndUpdate(req.params.id, update, { new: true });
-        res.json(updatedItem);
-    } catch (error) {
-        res.status(400).send(error);
-    }
-});*/
 router.put("/:id", async (req, res) => {
+    console.log("kanti tini");
     try {
         console.log("Updating task for:", req.params.id);
         console.log("Received task body:", req.body);
@@ -274,7 +111,7 @@ router.put("/:id", async (req, res) => {
 
             for (const [fieldName, file] of uploadedFiles) {
                 const sanitizedFileName = file.name.replace(/\s+/g, "_");
-                const fileName = `${timestamp}_${sanitizedFileName}`;
+                const fileName = `${timestamp}_${fieldName}_${sanitizedFileName}`;
                 const uploadPath = path.join(__dirname, "uploads", fileName);
 
                 try {
@@ -332,71 +169,6 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-/*router.put("/:id", async (req, res) => {
-    try {
-        console.log("may I never be a pick me",req.params);
-        console.log("the box",req.body);
-
-        // Destructure body with default values
-        const {
-            vehicleOwnerId = null,
-            driverId = null,
-            numberPlate = null,
-            startPoint = null,
-            endPoint = null,
-            status = null,
-            onload = null,
-            offload = null,
-            loadCapacity=null,
-        } = req.body || {}; // Safely destructure req.body with default values
-
-        let newFile = null;
-
-        console.log("Received files:", req.files);
-
-        // Handle file upload if provided
-        if (req.files && req.files.onload) {
-            newFile = new TaskFiles({
-                filename: req.files.onload.name,
-                contentType: req.files.onload.mimetype,
-                data: req.files.onload.data,
-            });
-
-            // Save the file to the database
-            const savedFile = await newFile.save();
-            console.log("File saved:", savedFile);
-
-            // Fetch the task and add the file to its file array
-            const task = await Task.findById(req.params.id);
-            task.file.push(savedFile._id); // Assuming your task model has a 'files' array
-            await task.save();
-        }
-
-        // Build the update object, only including non-null values
-        const update = {
-            ...(vehicleOwnerId && { vehicleOwnerId }),
-            ...(driverId && { driverId }),
-            ...(numberPlate && { numberPlate }),
-            ...(startPoint && { startPoint }),
-            ...(endPoint && { endPoint }),
-            ...(status && { status }),
-            ...(loadCapacity && { loadCapacity }),
-            ...(onload !== "null" && onload !== undefined && { onload }), // Ensure 'null' string is avoided
-            ...(offload !== "null" && offload !== undefined && { offload }), // Same for offload
-        };
-
-        console.log("Updating task with:", update);
-        console.log("id problems",req.params.id)
-
-
-        // Update the task with the new values
-        const updatedItem = await Task.findByIdAndUpdate(req.params.id, update, { new: true }).populate('file'); // Changed 'file' to 'files' assuming the field is plural
-        res.json(updatedItem);
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(400).send(error);
-    }
-});*/
 
 //delete task
 router.delete("/:id", async (req, res) => {

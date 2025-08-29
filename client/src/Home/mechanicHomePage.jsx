@@ -58,30 +58,14 @@ const MechanicHomePage = () => {
 
                     <Container className="dashboard-section">
                         <Typography variant="h4" gutterBottom>Real-Time Dashboard</Typography>
-                        <div className="dashboard-form">
-                            <FormControl fullWidth data-testid="periodFormControl">
-                                <InputLabel>Period</InputLabel>
-                                <Select value={period} onChange={(e) => setPeriod(e.target.value)} data-testid="periodSelect">
-                                    <MenuItem value="today" data-testid="periodToday">Today</MenuItem>
-                                    <MenuItem value="week" data-testid="periodWeek">This Week</MenuItem>
-                                    <MenuItem value="month" data-testid="periodMonth">This Month</MenuItem>
-                                    <MenuItem value="4months" data-testid="periodFourMonth">Last 4 Months</MenuItem>
-                                    <MenuItem value="year" data-testid="periodYear">This Year</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button variant="contained" color="primary" onClick={handleDownload} className="download-button" data-testid="downloadBtn">
-                                Download Report
-                            </Button>
-                        </div>
 
-
-                        {userDetails && period && (
+                        {userDetails && (
                             <Grid container spacing={3} style={{ width: '100%' }}>
                                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <BreakDown userId={userDetails._id} period={period} />
+                                    <BreakDown userId={userDetails._id} userRole={userDetails.userRole} />
                                 </Grid>
                                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <TruckBreakDown userId={userDetails._id} period={period} />
+                                    <TruckBreakDown userId={userDetails._id} userRole={userDetails.userRole} />
                                 </Grid>
                             </Grid>
                         )}

@@ -1,64 +1,94 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { listenForLocationUpdates, joinGroup } from '../services/socketService';
+import './map.css';
+import { getAdminLocation } from '../services/socketService';
 import { useAuth0 } from '@auth0/auth0-react';
 import axios from 'axios';
-import './map.css'; // Import the CSS file
 
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN; // Ensure the token is available
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 const VehicleOwnerMap = () => {
-  const [supervisorId, setSupervisorId] = useState('');
-  const { user } = useAuth0();
   const mapContainer = useRef(null);
   const map = useRef(null);
   const [driverLocations, setDriverLocations] = useState({});
   const [userLocation, setUserLocation] = useState(null);
-  const groupId = `supervisor-${supervisorId}`; // Unique groupId for each supervisor
+  const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuth0();
+  const [vehicleOwnerId, setVehicleOwnerId] = useState('');
+  const [ownedSerials, setOwnedSerials] = useState([]);
 
+  // Fetch vehicle owner ID and driver serials
   useEffect(() => {
-    if (user && user.email) {
-      fetchUserDetails(user.email);
+    const fetchUserAndDrivers = async () => {
+      try {
+        const userRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/backend/user/users/${user.email}`
+        );
+        const ownerId = userRes.data._id;
+        setVehicleOwnerId(ownerId);
+        console.log("tired",ownerId)
+
+        const driversRes = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/backend/truck/getDriversByOwner/${ ownerId }`
+        );
+
+        const serials = driversRes.data.map((driver) => driver.serialNumber);
+        setOwnedSerials(serials);
+      } catch (error) {
+        console.error('Error fetching vehicle owner and drivers:', error);
+      }
+    };
+
+    if (user?.email) {
+      fetchUserAndDrivers();
     }
   }, [user]);
 
-  const fetchUserDetails = async (email) => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/users/${email}`);
-      setSupervisorId(response.data._id);
-    } catch (error) {
-      console.error('Error fetching user details:', error);
-    }
-  };
-
+  // Handle real-time location updates
   useEffect(() => {
-    if (groupId) {
-      joinGroup(groupId);
-    }
+    const handleLocationUpdate = async (data) => {
+      const { latitude, longitude, serialNumber } = data;
 
-    const handleLocationUpdate = (data) => {
-      console.log(data)
-      const { driverId, location } = data;
-      setDriverLocations((prevLocations) => ({
-        ...prevLocations,
-        [driverId]: location,
-      }));
-    };
+      // Only process serial numbers assigned to this vehicle owner
+      if (!ownedSerials.includes(serialNumber)) return;
 
-    // Subscribe to location updates and get the cleanup function
-    const cleanup = listenForLocationUpdates(handleLocationUpdate);
+      try {
+        if (!driverLocations[serialNumber]?.firstname) {
+          const response = await axios.get(
+            `${import.meta.env.VITE_API_BASE_URL}/backend/truck/getDriver/${serialNumber}`
+          );
+          const { firstname, lastname, numberplate } = response.data;
 
-    return () => {
-      if (typeof cleanup === 'function') {
-        cleanup(); // Cleanup the listener when component unmounts
-      } else {
-        console.warn("Cleanup function is not defined.");
+          setDriverLocations((prev) => ({
+            ...prev,
+            [serialNumber]: {
+              latitude,
+              longitude,
+              firstname,
+              lastname,
+              numberplate,
+            },
+          }));
+        } else {
+          setDriverLocations((prev) => ({
+            ...prev,
+            [serialNumber]: {
+              ...prev[serialNumber],
+              latitude,
+              longitude,
+            },
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch driver info:', error);
       }
     };
-  }, [groupId]);
 
+    getAdminLocation(handleLocationUpdate);
+  }, [ownedSerials, driverLocations]);
+
+  // Get current user geolocation
   useEffect(() => {
-    // Get the user's location on mount
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -68,85 +98,89 @@ const VehicleOwnerMap = () => {
           });
         },
         (error) => {
-          console.error('Error getting user location:', error);
-          // Fallback to a default location if geolocation fails
-          setUserLocation({
-            latitude: 37.8,
-            longitude: -96,
-          });
+          console.error('Geolocation error:', error);
+          setUserLocation({ latitude: -26.2041, longitude: 28.0473 }); // Johannesburg fallback
         }
       );
     } else {
-      console.log('Geolocation is not supported by this browser.');
-      // Fallback to a default location if geolocation is not supported
-      setUserLocation({
-        latitude: 37.8,
-        longitude: -96,
-      });
+      setUserLocation({ latitude: -26.2041, longitude: 28.0473 });
     }
   }, []);
 
+  // Initialize the map
   useEffect(() => {
-    if (map.current) return; // Initialize map only once
+    if (map.current || !userLocation) return;
 
-    if (userLocation) {
-      // Initialize the Mapbox map
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11', // Choose your map style
-        center: [userLocation.longitude, userLocation.latitude], // Default center [lng, lat]
-        zoom: 5, // Default zoom level
-      });
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v11',
+      center: [userLocation.longitude, userLocation.latitude],
+      zoom: 8,
+    });
 
-      // Add navigation controls (zoom buttons)
-      map.current.addControl(new mapboxgl.NavigationControl());
-    }
+    map.current.addControl(new mapboxgl.NavigationControl());
   }, [userLocation]);
 
+  // Filter drivers based on search input
+  const filteredDrivers = Object.entries(driverLocations).filter(
+    ([serialNumber, driver]) => {
+      const fullName = `${driver.firstname} ${driver.lastname}`.toLowerCase();
+      const plate = driver?.numberplate?.toLowerCase() || '';
+      return (
+        fullName.includes(searchQuery) ||
+        serialNumber.toLowerCase().includes(searchQuery) ||
+        plate.includes(searchQuery)
+      );
+    }
+  );
+
+  // Update map markers when driverLocations or searchQuery changes
   useEffect(() => {
-    if (!map.current) return; // Ensure the map is initialized
+    if (!map.current) return;
 
-    // Clear existing markers
-    const markers = Object.keys(driverLocations).map(driverId => {
-      const location = driverLocations[driverId];
+    const markers = filteredDrivers.map(([serialNumber, driver]) => {
       const marker = new mapboxgl.Marker()
-        .setLngLat([location.longitude, location.latitude])
-        .setPopup(new mapboxgl.Popup().setHTML(`<h3>Driver ${driverId}</h3>`)) // Add a popup for each marker
+        .setLngLat([driver.longitude, driver.latitude])
+        .setPopup(
+          new mapboxgl.Popup().setHTML(`
+            <h3>${driver.firstname} ${driver.lastname}</h3>
+            <p>Serial: ${serialNumber}</p>
+            <p>Plate: ${driver.numberplate || 'Unknown'}</p>
+          `)
+        )
         .addTo(map.current);
-
       return marker;
     });
 
-    // Calculate bounds for the markers
     const bounds = new mapboxgl.LngLatBounds();
-    Object.values(driverLocations).forEach(location => {
-      bounds.extend([location.longitude, location.latitude]);
-    });
+    filteredDrivers.forEach(([_, { latitude, longitude }]) => bounds.extend([longitude, latitude]));
 
-    // Fit the map to the bounds of the markers
-    if (bounds.isEmpty()) {
-      map.current.flyTo({ center: [userLocation.longitude, userLocation.latitude], zoom: 5 }); // Default center if no markers
-    } else {
-      map.current.fitBounds(bounds, { padding: 20 });
+    if (!bounds.isEmpty()) {
+      map.current.fitBounds(bounds, { padding: 40 });
+    } else if (userLocation) {
+      map.current.flyTo({
+        center: [userLocation.longitude, userLocation.latitude],
+        zoom: 5,
+      });
     }
 
-    // Cleanup markers on map if needed
     return () => {
-      markers.forEach(marker => marker.remove()); // Cleanup markers when component unmounts or updates
+      markers.forEach((marker) => marker.remove());
     };
-  }, [driverLocations, userLocation]);
+  }, [filteredDrivers, userLocation]);
 
   return (
     <div>
+      <div className="ui-overlay">
+        <input
+          type="text"
+          placeholder="Search by name, numberplate, or serial"
+          onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
+          className="search-input"
+        />
+        <h2 style={{ color: 'black', marginLeft: 20 }}>Driver Locations</h2>
+      </div>
       <div ref={mapContainer} className="map-container" />
-      <h2>Driver Locations</h2>
-      <ul>
-        {Object.entries(driverLocations).map(([driverId, location]) => (
-          <li key={driverId}>
-            Driver {driverId}: Latitude: {location.latitude}, Longitude: {location.longitude}
-          </li>
-        ))}
-      </ul>
     </div>
   );
 };

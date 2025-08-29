@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import axios from 'axios';
 
 // Create context
 const AuthContext = createContext();
@@ -13,23 +14,36 @@ export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     user: null,
+    role: null,  // add role
+    name: null   // optional: if you want name globally
   });
-
+  
   useEffect(() => {
-    if (!isLoading) {  // Wait until Auth0 has finished loading
-      if (isAuthenticated) {
+    const fetchUserRole = async () => {
+      try {
+        const token = await getIdTokenClaims();
+        const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/auth/user-role/${user.email}`, {
+          headers: {
+            Authorization: `Bearer ${token.__raw}`,
+          },
+        });
+      
+  
         setAuthState({
           isAuthenticated: true,
           user: user,
+          role: response.data.role
         });
-      } else {
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-        });
+      } catch (err) {
+        console.error('Failed to fetch user role', err);
       }
+    };
+  
+    if (!isLoading && isAuthenticated && user) {
+      fetchUserRole();
     }
   }, [isAuthenticated, user, isLoading]);
+  
 
   return (
     <AuthContext.Provider value={{ authState, loginWithRedirect, logout, getIdTokenClaims }}>

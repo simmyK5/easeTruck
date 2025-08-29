@@ -1,18 +1,191 @@
-/* Map.css */
-
-/* Ensure the HTML and body elements fill the screen */
+/* General Page Styles */
 html, body {
-    height: 100%;
-    margin: 0;
-    width: 100%; /* Full width */
-    overflow: hidden; /* Prevent horizontal scrollbar */
-  }
-  
-  .map-container {
-    height: 100vh; /* Full viewport height */
-    width: 100vw; /* Full viewport width */
-    position: absolute; /* Make sure the container takes up the full width and height */
-    top: 0;
-    left: 0;
-  }
-  
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: visible; /* ✅ let dropdowns render */
+}
+
+/* Map Container */
+.map-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 0;
+}
+
+/* Geocoder Wrapper */
+.geocoder-wrapper {
+  position: absolute;
+  top: 80px;
+  left: 10px;
+  width: 320px;
+  z-index: 9999;
+}
+
+/* Geocoder Container */
+.geocoder-container {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Geocoder Styles */
+.geocoder {
+  position: relative;
+  width: 100%;
+}
+
+.geocoder.to {
+  top: unset; /* remove previous offset */
+}
+
+/* Mapbox Geocoder Control */
+.mapboxgl-ctrl-geocoder {
+  width: 100%;
+  display: flex !important;
+  align-items: center;
+  position: relative;
+  flex-direction: column; /* Ensures the search fields stack vertically */
+}
+
+/* Search Input Field */
+.mapboxgl-ctrl-geocoder input[type="text"] {
+  width: 100%;
+  padding: 10px 35px 10px 10px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-shadow: none;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.mapboxgl-ctrl-geocoder input[type="text"]:focus {
+  border-color: #1890ff;
+}
+
+/* Hide Default Search Icon */
+.mapboxgl-ctrl-geocoder--icon {
+  display: none;
+}
+
+/* Close Icon Positioning */
+.mapboxgl-ctrl-geocoder--icon-close {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  z-index: 10;
+  background-color: transparent;
+}
+
+/* Suggestion Styles */
+.mapboxgl-ctrl-geocoder--suggestion {
+  padding: 8px 10px;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion:last-child {
+  border-bottom: none;
+}
+
+.mapboxgl-ctrl-geocoder--suggestion:hover {
+  background: #f0f0f0;
+}
+
+/* Result View Box Styling */
+.mapboxgl-ctrl-geocoder--result {
+  padding-top: 10px;
+  color: #333;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Attribution */
+.mapboxgl-ctrl-geocoder--attribution {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+/* Geocoder Suggestions Styling */
+.mapboxgl-ctrl-geocoder--suggestions {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0;
+  width: 100%;
+  z-index: 10000;
+  background: white;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.directions {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: auto;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stop-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.stop-button:hover {
+  background-color: #b71c1c;
+}
+
+.search-input {
+  position: absolute; /* ← make it float over the map */
+  top: 20px;
+  left: 20px;
+  z-index: 1001; /* ← must be higher than the map (z-index: 0) */
+  width: 300px;
+  max-width: 90vw;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.ui-overlay {
+  position: absolute;
+  z-index: 1001;
+  width: 100%;
+}

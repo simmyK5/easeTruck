@@ -131,7 +131,7 @@ const TechnicianInstallation = () => {
 
             if (isEditing === "edit") {
                 console.log(dataToSubmit);
-                await axios.put(`${import.meta.env.VITE_API_BASE_URL}/backend/installation/${formData._id}`, dataToSubmit);
+                await axios.put(`${import.meta.env.VITE_API_BASE_URL}/backend/installation/techInstallation/${formData._id}`, dataToSubmit);
             }
             fetchItems();
             handleClose();
@@ -152,33 +152,35 @@ const TechnicianInstallation = () => {
     };
 
     const columns = [
-        { field: 'email', headerName: 'email', width: 150, editable: true },
+        { field: 'email', headerName: 'email', width: 250, editable: true },
         {
             field: 'address',
             headerName: 'Address',
-            width: 250,
+            width: 350,
             editable: true,
-            valueGetter: (params) => {
-                // Ensure that addresses exist and is an object
-                const address = params;
-                if (address) {
-                    return `${address.address_line_1}, ${address.address_line_2}, ${address.admin_area_2}, ${address.admin_area_1}, ${address.postal_code},${address.country_code}`;
-                }
-                return '';  // Return an empty string if `addresses` doesn't exist
-            }
         },
         {
             field: 'items',
             headerName: 'Items',
-            width: 250,
-            editable: true,
+            width: 350,
+            editable: false,
             valueGetter: (params) => {
-                if (params && Array.isArray(params)) {
-                    return params.map(item => item.name).join(', ');
+                console.log("kulate",params)
+                const items = params;
+                if (Array.isArray(items)) {
+                    console.log("kulate")
+                    return items.map(itemStr => {
+                        try {
+                            const item = JSON.parse(itemStr);
+                            return `${item.name} Q:${item.quantity} - R${item.price.toFixed(2)}`;
+                        } catch (e) {
+                            return '';
+                        }
+                    }).join(', ');
                 }
-                return '';  // Return an empty string if `items` doesn't exist or isn't an array
+                return '';
             }
-        },
+        }, 
         { field: 'status', headerName: 'status', width: 100, editable: true },
         { field: 'createdAt', headerName: 'createdAt', width: 155, editable: true },
         {

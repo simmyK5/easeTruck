@@ -19,8 +19,8 @@ router.get('/:userId/:otherUserId', async (req, res) => {
     try {
         const messages = await Message.find({
             $or: [
-                { senderId: userId, receiverId: otherUserId },
-                { senderId: otherUserId, receiverId: userId }
+                { senderId: userId, usersInConversation: otherUserId },
+                { senderId: otherUserId, usersInConversation: userId }
             ]
         }).sort({ timestamp: 1 });
         res.json(messages);
@@ -32,9 +32,11 @@ router.get('/:userId/:otherUserId', async (req, res) => {
 // Save a new message
 router.post('/:userId/:otherUserId', async (req, res) => {
     console.log(req.body)
-    const { senderId, receiverId, message } = req.body;
+    console.log("yiyo",req.params)
+    const { userId, otherUserId } = req.params;
+    const { content,callLog } = req.body;
     try {
-        const newMessage = new Message({ senderId, receiverId, message });
+        const newMessage = new Message({ senderId:userId, usersInConversation:otherUserId, content,callLog  });
         await newMessage.save();
         res.status(201).json(newMessage);
     } catch (err) {

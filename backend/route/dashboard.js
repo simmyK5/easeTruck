@@ -67,75 +67,278 @@ const getDateRange = (period) => {
 
 // get all acceleration by driver id
 //router.get("/acceleration/:userId/:period", async (req, res) => {
+
 router.get("/acceleration", async (req, res) => {
-    const { userId, period } = req.query;
-    const { startDate, endDate } = getDateRange(period);
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
+
     try {
-        // Find the user and populate acceleration data
-        //const user = await User.findById(userId).populate('acceleration').exec();
-        /*const user = await User.findById(userId)
-        .populate('vehicleOwnerId') // Populate the `vehicleOwnerId` field
-        .populate('acceleration') // Populate the `acceleration` field if it references other data
-        .exec();*/
+        let users;
 
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('acceleration') // Assuming acceleration is a field to populate in the User model
-            .exec();
-
-        if (!users) {
-            return res.status(404).send('User not found');
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("acceleration").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("acceleration").exec();
         }
-        //console.log(user.acceleration)
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
 
         let allFilteredAccelerations = [];
 
-        // Iterate through all users to filter acceleration data
         users.forEach(user => {
-            if (user.acceleration && Array.isArray(user.acceleration) && user.acceleration.length > 0) {
-                // Filter acceleration data within the date range for each user
-                const filteredAccelerations = user.acceleration.filter(acceleration => {
-                    return acceleration.timestamp >= startDate && acceleration.timestamp <= endDate;
-                });
+            if (Array.isArray(user.acceleration)) {
+                const filtered = user.acceleration
+                    .filter(accel => accel.timestamp >= startDate && accel.timestamp <= endDate)
+                    .map(accel => ({
+                        ...accel.toObject(),
+                        driverId: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
 
-                // Add the filtered data to the result array
-                allFilteredAccelerations = allFilteredAccelerations.concat(filteredAccelerations);
+                allFilteredAccelerations.push(...filtered);
             }
         });
 
         if (allFilteredAccelerations.length === 0) {
-            return res.status(404).send('No acceleration data found for the given period');
+            return res.status(404).send("No acceleration data found for the given period");
         }
 
-        // Respond with combined filtered data
-        return res.status(200).json(allFilteredAccelerations);
+        const uniqueAccelerations = Array.from(
+            new Map(allFilteredAccelerations.map(a => [a._id.toString(), a])).values()
+        );
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueAccelerations.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                console.log("yaken", groupBy)
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueAccelerations);
+
     } catch (err) {
-        console.error('Error fetching acceleration data:', err);
-        res.status(500).send('Server error');
+        console.error("Error fetching acceleration data:", err);
+        res.status(500).send("Server error");
     }
 });
+
+
+router.get("/securityAlert", async (req, res) => {
+
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+    const startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    const endDate = customEndDate ? new Date(customEndDate) : new Date();
+
+    try {
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("glassBreak")
+                .populate("people")
+                .populate("puncher")
+                .populate("weapon")
+                .exec();
+        } else {
+            /* users = await User.find({
+                 $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+             }).populate("acceleration").exec();*/
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("glassBreak")
+                .populate("people")
+                .populate("puncher")
+                .populate("weapon")
+                .exec();
+        }
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allAlerts = [];
+
+
+
+        users.forEach(user => {
+            //const fullName = `${user.firstName} ${user.lastName}`;
+
+            const sources = [
+                { key: "glassBreak", label: "Glass Break" },
+                { key: "people", label: "People" },
+                { key: "puncher", label: "Puncher" }
+            ];
+
+            sources.forEach(({ key, label }) => {
+
+                const events = user[key];
+                if (typeof events === 'object') {
+                    console.log("ngane", events)
+                    const filtered = events
+                        .filter(e => e.timestamp >= startDate && e.timestamp <= endDate)
+                        .map(e => {
+                            const coords = e.truckLocation?.coordinates || [null, null]; // [longitude, latitude]
+                            const [latitude,longitude,] = coords;
+
+                            console.log("snokolo",longitude)
+                            console.log("evil",latitude)
+
+                            return {
+                                ...e.toObject(),
+                                alertType: label,
+                                driverId: user._id,
+                                firstName: user.firstName,
+                                lastName: user.lastName,
+                                fullName: `${user.firstName} ${user.lastName}`,
+                                latitude,
+                                longitude,
+                            };
+                        });
+
+                    allAlerts.push(...filtered);
+                }
+            });
+        });
+
+        if (allAlerts.length === 0) {
+            return res.status(404).send("No security alerts found for the given period");
+        }
+
+        // Remove duplicates by _id
+        const uniqueAlerts = Array.from(
+            new Map(allAlerts.map(alert => [alert._id.toString(), alert])).values()
+        );
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueAlerts.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueAlerts);
+
+    } catch (err) {
+        console.error("Error fetching security alerts:", err);
+        res.status(500).send("Server error");
+    }
+});
+
+
+
+router.get("/highSpeed", async (req, res) => {
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
+
+    try {
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("highSpeed").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("highSpeed").exec();
+        }
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allFilteredHighSpeed = [];
+
+        users.forEach(user => {
+            if (Array.isArray(user.highSpeed)) {
+                const filtered = user.highSpeed
+                    .filter(highspeed => highspeed.timestamp >= startDate && highspeed.timestamp <= endDate)
+                    .map(highspeed => ({
+                        ...highspeed.toObject(),
+                        driverId: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
+
+                allFilteredHighSpeed.push(...filtered);
+            }
+        });
+
+        if (allFilteredHighSpeed.length === 0) {
+            return res.status(404).send("No highspeed data found for the given period");
+        }
+
+        const uniqueHighSpeed = Array.from(
+            new Map(allFilteredHighSpeed.map(a => [a._id.toString(), a])).values()
+        );
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueHighSpeed.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                console.log("yaken", groupBy)
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueHighSpeed);
+
+    } catch (err) {
+        console.error("Error fetching acceleration data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
 
 // get all fuel by driver id
 router.get("/fuel", async (req, res) => {
 
-    const { userId, period } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
 
     try {
         // Find the user and populate acceleration data
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('fuel') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+                .populate("fuel")
+                .exec();
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("fuel")
+                .exec();
+        }
 
         if (!users) {
             return res.status(404).send('User not found');
@@ -163,8 +366,12 @@ router.get("/fuel", async (req, res) => {
             return res.status(404).send('No fuel data found for the given period');
         }
 
+        const uniqueSteerings = Array.from(
+            new Map(allFilteredFuel.map(s => [s._id.toString(), s])).values()
+        );
+
         // Respond with combined filtered data
-        return res.status(200).json(allFilteredFuel);
+        return res.status(200).json(uniqueSteerings);
     } catch (err) {
         console.error('Error fetching acceleration data:', err);
         res.status(500).send('Server error');
@@ -172,72 +379,103 @@ router.get("/fuel", async (req, res) => {
 
 })
 
-// get all idleTime by driver id
 router.get("/idleTime", async (req, res) => {
-    const { userId, period } = req.query;
-    const { startDate, endDate } = getDateRange(period);
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
 
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
 
     try {
-        // Find the user and populate acceleration data
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('idletimes') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
 
-        if (!users) {
-            return res.status(404).send('User not found');
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("idletimes").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("idletimes").exec();
         }
 
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
 
-        let allFilteredIdleTimes = [];
+        let allFilteredIdletime = [];
 
-        // Iterate through all users to filter acceleration data
         users.forEach(user => {
-            if (user.idletimes && Array.isArray(user.idletimes) && user.idletimes.length > 0) {
-                // Filter acceleration data within the date range for each user
-                const filteredIdleTimes = user.idletimes.filter(idleTime => {
-                    return idleTime.timestamp >= startDate && idleTime.timestamp <= endDate;
-                });
+            if (Array.isArray(user.idletimes)) {
+                const filtered = user.idletimes
+                    .filter(idletimes => idletimes.timestamp >= startDate && idletimes.timestamp <= endDate)
+                    .map(idletimes => ({
+                        ...idletimes.toObject(),
+                        driverId: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
 
-                // Add the filtered data to the result array
-                allFilteredIdleTimes = allFilteredIdleTimes.concat(filteredIdleTimes);
-
+                allFilteredIdletime.push(...filtered);
             }
         });
 
-        if (allFilteredIdleTimes.length === 0) {
-            return res.status(404).send('No fuel data found for the given period');
+        if (allFilteredIdletime.length === 0) {
+            return res.status(404).send("No idletimes data found for the given period");
         }
 
-        // Respond with combined filtered data
-        return res.status(200).json(allFilteredIdleTimes);
-    } catch (err) {
-        console.error('Error fetching Idle Time data:', err);
-        res.status(500).send('Server error');
-    }
+        const uniqueIdletimes = Array.from(
+            new Map(allFilteredIdletime.map(a => [a._id.toString(), a])).values()
+        );
 
-})
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueIdletimes.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                console.log("yaken", groupBy)
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueIdletimes);
+
+    } catch (err) {
+        console.error("Error fetching Idletime data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
 
 // get all service by driver id
 router.get("/service", async (req, res) => {
-    const { userId, period } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Fetch user with populated trucks
-        const trucks = await truck.find({
-            $or: [
-                { driver: userId },
-                { vehicleOwner: userId }
-            ]
-        })
-            .populate('serviceDue') // Assuming acceleration is a field to populate in the User model
-            .exec();
+
+        let trucks;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            trucks = await truck.find({})
+                .populate("serviceDue")
+                .exec();
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            trucks = await truck.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("serviceDue")
+                .exec();
+        }
+
+
 
         if (!trucks) {
             return res.status(404).send('User not found');
@@ -270,19 +508,32 @@ router.get("/service", async (req, res) => {
 
 // get all tireService by driver id
 router.get("/tireService", async (req, res) => {
-    const { userId, period } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Fetch user with populated trucks
-        const trucks = await truck.find({
-            $or: [
-                { driver: userId },
-                { vehicleOwner: userId }
-            ]
-        })
-            .populate('tireService') // Assuming acceleration is a field to populate in the User model
-            .exec();
+
+        let trucks;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            trucks = await truck.find({})
+                .populate("tireService")
+                .exec();
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            trucks = await truck.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("tireService")
+                .exec();
+        }
+
 
         if (!trucks) {
             return res.status(404).send('User not found');
@@ -311,145 +562,273 @@ router.get("/tireService", async (req, res) => {
 
 })
 
-// get all turning by driver id
 router.get("/steering", async (req, res) => {
-    const { userId, period } = req.query;
-    const { startDate, endDate } = getDateRange(period);
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
 
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
 
     try {
-        // Find the user and populate acceleration data
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('steerings') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
 
-        if (!users) {
-            return res.status(404).send('User not found');
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("steerings").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("steerings").exec();
         }
 
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
 
         let allFilteredSteering = [];
 
-        // Iterate through all users to filter acceleration data
         users.forEach(user => {
-            if (user.steerings && Array.isArray(user.steerings) && user.steerings.length > 0) {
+            if (Array.isArray(user.steerings)) {
+                const filtered = user.steerings
+                    .filter(steerings => steerings.timestamp >= startDate && steerings.timestamp <= endDate)
+                    .map(steerings => ({
+                        ...steerings.toObject(),
+                        driverId: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
 
-                // Filter acceleration data within the date range for each user
-                const filteredIdleTimes = user.steerings.filter(steering => {
-                    return steering.timestamp >= startDate && steering.timestamp <= endDate;
-                });
-
-                // Add the filtered data to the result array
-                allFilteredSteering = allFilteredSteering.concat(filteredIdleTimes);
+                allFilteredSteering.push(...filtered);
             }
         });
 
         if (allFilteredSteering.length === 0) {
-            return res.status(404).send('No fuel data found for the given period');
+            return res.status(404).send("No steering data found for the given period");
         }
 
-        // Respond with combined filtered data
-        return res.status(200).json(allFilteredSteering);
-    } catch (err) {
-        console.error('Error fetching Idle Time data:', err);
-        res.status(500).send('Server error');
-    }
+        const uniqueSteering = Array.from(
+            new Map(allFilteredSteering.map(a => [a._id.toString(), a])).values()
+        );
 
-})
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueSteering.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                console.log("yaken", groupBy)
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueSteering);
+
+    } catch (err) {
+        console.error("Error fetching steering data:", err);
+        res.status(500).send("Server error");
+    }
+});
 
 router.get("/braking", async (req, res) => {
-    const { userId, period } = req.query;
-    const { startDate, endDate } = getDateRange(period);
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
 
     try {
-        // Find the user and populate brakes data
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('brake') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
 
-        if (!users) {
-            return res.status(404).send('User not found');
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("brake").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("brake").exec();
         }
 
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
 
-        let allFilteredBrakes = [];
+        let allFilteredBrake = [];
 
-        // Iterate through all users to filter acceleration data
         users.forEach(user => {
-            if (user.steerings && Array.isArray(user.steerings) && user.steerings.length > 0) {
+            if (Array.isArray(user.brake)) {
+                const filtered = user.brake
+                    .filter(brake => brake.timestamp >= startDate && brake.timestamp <= endDate)
+                    .map(brake => ({
+                        ...brake.toObject(),
+                        driverId: user._id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
 
-                // Filter acceleration data within the date range for each user
-                const filteredBrake = user.brake.filter(brake => {
-                    return brake.timestamp >= startDate && brake.timestamp <= endDate;
-                });
-
-                // Add the filtered data to the result array
-                allFilteredBrakes = allFilteredBrakes.concat(filteredBrake);
+                allFilteredBrake.push(...filtered);
             }
         });
 
-        if (allFilteredBrakes.length === 0) {
-            return res.status(404).send('No fuel data found for the given period');
+        if (allFilteredBrake.length === 0) {
+            return res.status(404).send("No acceleration data found for the given period");
         }
 
-        // Respond with combined filtered data
-        return res.status(200).json(allFilteredBrakes);
+        const uniqueBrake = Array.from(
+            new Map(allFilteredBrake.map(a => [a._id.toString(), a])).values()
+        );
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueBrake.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                console.log("yaken", groupBy)
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueBrake);
+
     } catch (err) {
-        console.error('Error fetching braking data:', err);
-        res.status(500).send('Server error');
+        console.error("Error fetching acceleration data:", err);
+        res.status(500).send("Server error");
     }
 });
 
 
 router.get("/trucks", async (req, res) => {
-    const { userId, period } = req.query;
-    const { startDate, endDate } = getDateRange(period);
-    console.log('what')
+    const { userId, userRole } = req.query;
 
     try {
-        // Find the user and populate brakes data
-        const user = await User.findById(userId).populate('truck').exec();
-        if (!user) {
-            return res.status(404).send('User not found');
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("truck").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("truck").exec();
         }
 
-        // Filter brakes data within the date range
-        const filteredTrucks = user.truck.filter(truck => {
-            return truck.timestamp >= startDate && truck.timestamp <= endDate;
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allFilteredTrucks = [];
+
+        users.forEach(user => {
+            if (Array.isArray(user.truck)) {
+                const enrichedTrucks = user.truck.map(truck => ({
+                    ...truck.toObject(),
+                    driverId: user._id,
+                    fullName: `${user.firstName} ${user.lastName}`,
+                }));
+
+                allFilteredTrucks.push(...enrichedTrucks);
+            }
         });
 
-        res.status(200).json(filteredTrucks);
+
+        if (allFilteredTrucks.length === 0) {
+            return res.status(404).send("No highspeed data found for the given period");
+        }
+
+        const uniqueTruck = Array.from(
+            new Map(allFilteredTrucks.map(a => [a._id.toString(), a])).values()
+        );
+
+        return res.status(200).json(uniqueTruck);
+
     } catch (err) {
-        console.error('Error fetching service data:', err);
-        res.status(500).send('Server error');
+        console.error("Error fetching acceleration data:", err);
+        res.status(500).send("Server error");
     }
 });
 
 router.get("/voucher", async (req, res) => {
-    const { userId, period } = req.query;
+    const { userId, userRole } = req.query;
+
+    try {
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("vouchers").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("vouchers").exec();
+        }
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allFilteredVoucher = [];
+
+        users.forEach(user => {
+            if (Array.isArray(user.truck)) {
+                const enrichedTrucks = user.truck.map(truck => ({
+                    ...truck.toObject(),
+                    driverId: user._id,
+                    fullName: `${user.firstName} ${user.lastName}`,
+                }));
+
+                allFilteredVoucher.push(...enrichedTrucks);
+            }
+        });
+
+
+        if (allFilteredVoucher.length === 0) {
+            return res.status(404).send("No voucher data found for the given period");
+        }
+
+        const uniqueTruck = Array.from(
+            new Map(allFilteredVoucher.map(a => [a._id.toString(), a])).values()
+        );
+
+        return res.status(200).json(uniqueTruck);
+
+    } catch (err) {
+        console.error("Error fetching voucher data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
+/*router.get("/voucher", async (req, res) => {
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
 
     try {
-        // Find the user and populate brakes data
-        const user = await User.findById(userId).populate('vouchers').exec();
 
-        if (!user) {
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+                .populate("vouchers")
+                .exec();
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("vouchers")
+                .exec();
+        }
+
+        if (!users) {
             return res.status(404).send('User not found');
         }
 
         // Filter brakes data within the date range
-        const filteredTrucks = user.vouchers.filter(voucher => {
+        const filteredTrucks = users.vouchers.filter(voucher => {
             return voucher.timestamp >= startDate && voucher.timestamp <= endDate;
         });
 
@@ -459,23 +838,104 @@ router.get("/voucher", async (req, res) => {
         console.error('Error fetching service data:', err);
         res.status(500).send('Server error');
     }
-});
+});*/
+
 
 router.get("/load", async (req, res) => {
-    const { userId, period } = req.query;
+    const { userId, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+
+    let startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    let endDate = customEndDate ? new Date(customEndDate) : new Date();
+
+    try {
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("task").exec();
+        } else {
+            users = await User.find({
+                $or: [{ _id: userId }, { vehicleOwnerId: userId }]
+            }).populate("task").exec();
+        }
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allFilteredTask = [];
+
+        users.forEach(user => {
+            if (Array.isArray(user.task)) {
+                const filtered = user.task
+                    .filter(task => task.createdAt >= startDate && task.createdAt <= endDate)
+                    .map(task => ({
+                        ...task.toObject(),
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        fullName: `${user.firstName} ${user.lastName}`,
+                    }));
+                console.log("zikhona", filtered)
+                allFilteredTask.push(...filtered);
+            }
+        });
+
+        if (allFilteredTask.length === 0) {
+            return res.status(404).send("No load data found for the given period");
+        }
+
+        const uniqueBrake = Array.from(
+            new Map(allFilteredTask.map(a => [a._id.toString(), a])).values()
+        );
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueBrake.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                console.log("what acc", acc)
+                return acc;
+            }, {});
+            return res.status(200).json(grouped);
+        }
+
+        return res.status(200).json(uniqueBrake);
+
+    } catch (err) {
+        console.error("Error fetching load data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
+
+/*router.get("/load", async (req, res) => {
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find all users with the specified vehicleOwnerId and populate tasks
         //const users = await User.find({ vehicleOwnerId: userId }).populate('task').exec();
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('task') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+                .populate("task")
+                .exec();
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("task")
+                .exec();
+        }
 
         if (!users || users.length === 0) {
             return res.status(404).send('Users not found');
@@ -498,22 +958,45 @@ router.get("/load", async (req, res) => {
             })
             .filter(user => user.tasks.length > 0);  // Filter out users with no tasks
 
-        // console.log("Filtered driver data:", filteredUsersWithTasks);
+        const uniqueSteerings = Array.from(
+            new Map(filteredUsersWithTasks.map(s => [s._id.toString(), s])).values()
+        );
 
-        // Respond with the filtered users and their filtered tasks
-        res.status(200).json(filteredUsersWithTasks);
+        // Respond with combined filtered data
+        return res.status(200).json(uniqueSteerings);
     } catch (err) {
         console.error('Error fetching driver data:', err);
         res.status(500).send('Server error');
     }
-});
+});*/
+
+
 router.get("/overLoad", async (req, res) => {
-    const { userId, period } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find all users with the specified vehicleOwnerId and populate tasks
-        const users = await User.find({ vehicleOwnerId: userId }).populate('task').exec();
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+                .populate("task")
+                .exec();
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("task")
+                .exec();
+        }
 
         if (!users || users.length === 0) {
             return res.status(404).send('Users not found');
@@ -522,14 +1005,18 @@ router.get("/overLoad", async (req, res) => {
         // Accumulate all overloaded tasks into a single array
         const overloadedTasks = users.flatMap(user => {
             return user.task.filter(task => {
-                console.log("debugging task",task)
+                console.log("debugging task", task)
                 const taskDate = new Date(task.createdAt); // Assuming task has createdAt field
                 return taskDate >= new Date(startDate) && taskDate <= new Date(endDate) && task.onload > task.loadCapacity;
             });
         });
 
-        // Respond with the accumulated overloaded tasks
-        res.status(200).json(overloadedTasks);
+        const uniqueSteerings = Array.from(
+            new Map(overloadedTasks.map(s => [s._id.toString(), s])).values()
+        );
+
+        // Respond with combined filtered data
+        return res.status(200).json(uniqueSteerings);
     } catch (err) {
         console.error('Error fetching tasks:', err);
         res.status(500).send('Server error');
@@ -537,20 +1024,32 @@ router.get("/overLoad", async (req, res) => {
 });
 
 router.get("/task", async (req, res) => {
-    const { userId, period } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
     console.log('what')
 
     try {
         // Find the user and populate brakes data
-        const users = await User.find({
-            $or: [
-                { _id: userId },
-                { vehicleOwnerId: userId }
-            ]
-        })
-            .populate('task') // Assuming acceleration is a field to populate in the User model
-            .exec();
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+                .populate("task")
+                .exec();
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.find({
+                $or: [
+                    { _id: userId },
+                    { vehicleOwnerId: userId }
+                ]
+            })
+                .populate("task")
+                .exec();
+        }
 
         if (!users) {
             return res.status(404).send('User not found');
@@ -577,8 +1076,12 @@ router.get("/task", async (req, res) => {
             return res.status(404).send('No fuel data found for the given period');
         }
 
+        const uniqueSteerings = Array.from(
+            new Map(allFilteredTask.map(s => [s._id.toString(), s])).values()
+        );
+
         // Respond with combined filtered data
-        return res.status(200).json(allFilteredTask);
+        return res.status(200).json(uniqueSteerings);
     } catch (err) {
         console.error('Error fetching service data:', err);
         res.status(500).send('Server error');
@@ -586,21 +1089,31 @@ router.get("/task", async (req, res) => {
 });
 
 router.get("/breakDown", async (req, res) => {
-    const { period, userId } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find user by userId
         console.log("wozala", userId);
-        const user = await User.findById(userId);
-        if (!user) {
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+            console.log("why we not entering", users)
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.findById(userId)
+        }
+        if (!users) {
             return res.status(404).send('User not found');
         }
-        console.log("mothla sona", user.vehicleOwnerId);
+        console.log("mothla sona", users.vehicleOwnerId);
 
         // Find all messages for the user's vehicleOwnerId
         const messages = await Message.find({
-            chatId: { $regex: user.vehicleOwnerId } // Check if vehicleOwnerId is part of chatId
+            chatId: { $regex: users.vehicleOwnerId } // Check if vehicleOwnerId is part of chatId
         });
         console.log("mothla sona message", messages);
         if (!messages || messages.length === 0) {
@@ -621,7 +1134,7 @@ router.get("/breakDown", async (req, res) => {
                     console.log(noteDate);
                     console.log(endDate);
                     return note.breakdown === true &&
-                        noteDate >= new Date(startDate) && 
+                        noteDate >= new Date(startDate) &&
                         noteDate <= new Date(endDate);
                 });
             });
@@ -652,16 +1165,25 @@ router.get("/breakDown", async (req, res) => {
 
 
 router.get("/truckBreakDown", async (req, res) => {
-    const { period, userId } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
-        const user = await User.findById(userId);
-        if (!user) {
+        let users;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            users = await User.find({})
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            users = await User.findById(userId);
+        }
+        if (!users) {
             return res.status(404).send('User not found');
         }
         const messages = await Message.find({
-            chatId: { $regex: user.vehicleOwnerId } // Check if vehicleOwnerId is part of chatId
+            chatId: { $regex: users.vehicleOwnerId } // Check if vehicleOwnerId is part of chatId
         });
         if (!messages || messages.length === 0) {
             return res.status(404).send('No messages found');
@@ -676,7 +1198,7 @@ router.get("/truckBreakDown", async (req, res) => {
                 return callLog.notes.filter(note => {
                     const noteDate = new Date(note.timestamp);
                     return note.breakdown === true &&
-                        noteDate >= new Date(startDate) && 
+                        noteDate >= new Date(startDate) &&
                         noteDate <= new Date(endDate);
                 }).map(note => {
                     // Extract number plate from the note
@@ -697,7 +1219,7 @@ router.get("/truckBreakDown", async (req, res) => {
         if (Object.keys(breakdownCounts).length === 0) {
             return res.status(404).send('No breakdown data found for the given period');
         }
-        console.log("see breakdown",breakdownCounts)
+        console.log("see breakdown", breakdownCounts)
 
         // Respond with the breakdown counts by number plate
         return res.status(200).json(breakdownCounts);
@@ -740,13 +1262,21 @@ router.get("/installation", async (req, res) => {
 });
 
 router.get("/driverInstallation", async (req, res) => {
-    const { period, userId } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find all installations
         console.log("userId", userId)
-        const installations = await Installation.find({ technician: userId });
+        let installations;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+            installations = await Installation.find({})
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            installations = await Installation.find({ technician: userId });
+        }
         console.log("my dawg", installations)
         if (!installations || installations.length === 0) {
             return res.status(404).send('No installations found');
@@ -810,13 +1340,22 @@ router.get("/installationType", async (req, res) => {
 });
 
 router.get("/driverInstallationType", async (req, res) => {
-    const { period, userId } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find all installations
         console.log("userId", userId)
-        const installations = await Installation.find({ technician: userId });
+        let installations;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            installations = await Installation.find({});
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            installations = await Installation.find({ technician: userId });
+        }
         console.log("my dawg two", installations)
 
         if (!installations || installations.length === 0) {
@@ -891,13 +1430,22 @@ router.get("/installationProvince", async (req, res) => {
 });
 
 router.get("/driverInstallationProvince", async (req, res) => {
-    const { period, userId } = req.query;
+    const { period, userId, userRole } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
     try {
         // Find all installations
         console.log("userId", userId)
-        const installations = await Installation.find({ technician: userId });
+        let installations;
+
+        // Superadmin and Admin can see all users' data
+        if (userRole == "superAdmin" || userRole == "admin") {
+
+            installations = await Installation.find({});
+        } else {
+            //const userId = req.user._id; // Securely use authenticated user ID
+            installations = await Installation.find({ technician: userId });
+        }
         console.log("my dawg three", installations)
         if (!installations || installations.length === 0) {
             return res.status(404).send('No installations found');
@@ -1032,6 +1580,200 @@ router.get("/feedbackStatus", async (req, res) => {
 
 
 router.get("/allAd", async (req, res) => {
+    console.log("yini", req.query)
+    const { userEmail, userRole, groupBy, customStartDate, customEndDate } = req.query;
+
+    const startDate = customStartDate ? new Date(customStartDate) : new Date("1970-01-01");
+    const endDate = customEndDate ? new Date(customEndDate) : new Date();
+
+    try {
+        let ads;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            ads = await Ad.find({});
+        } else {
+            ads = await Ad.find({ email: userEmail });
+        }
+
+        if (!ads || ads.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+
+
+        let allFilteredAd = [];
+
+
+        ads.forEach(ad => {
+            if (Array.isArray(ad)) {
+                const filtered = ad
+                    .filter(a => a.startDate >= startDate && a.endDate <= endDate)
+                    .map(a => ({ ...a.toObject() }));
+
+                allFilteredAd.push(...filtered);
+
+            } else if (ad && typeof ad === 'object') {
+                console.log("threenice ", ad)
+                if (ad.startDate >= startDate && ad.endDate <= endDate) {
+                    const filtered = [{ ...ad.toObject() }];
+
+                    allFilteredAd.push(...filtered);
+
+                }
+            } else {
+                console.error('Unexpected ad type:', ad);
+            }
+        });
+
+        console.log("fournice ", allFilteredAd)
+        if (allFilteredAd.length === 0) {
+            return res.status(404).send("No ad data found for the given period");
+        }
+
+        // Remove duplicates
+        const uniqueAd = Array.from(
+            new Map(allFilteredAd.map(a => [a._id.toString(), a])).values()
+        );
+
+
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = {};
+
+            uniqueAd.forEach(ad => {
+                const key = ad[groupBy] || "Unknown";
+                if (!grouped[key]) {
+                    grouped[key] = [];
+                }
+                grouped[key].push(ad);
+            });
+
+            // Now add combineTotal to each ad inside its group
+            Object.keys(grouped).forEach(key => {
+                const total = grouped[key].reduce((sum, ad) => sum + (ad.totalAmount || 0), 0);
+                grouped[key] = grouped[key].map(ad => ({
+                    ...ad,
+                    combineTotal: total
+                }));
+            });
+
+            return res.status(200).json(grouped);
+        }
+
+        // If no grouping, just add combineTotal to each ad
+        const total = uniqueAd.reduce((sum, ad) => sum + (ad.totalAmount || 0), 0);
+        const adsWithTotal = uniqueAd.map(ad => ({
+            ...ad,
+            combineTotal: total
+        }));
+
+        return res.status(200).json(adsWithTotal);
+
+
+    } catch (err) {
+        console.error("Error fetching ad data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
+
+router.get("/activeAd", async (req, res) => {
+    const { userEmail, userRole, groupBy, currentDate } = req.query;
+    console.log("dumelaone ", currentDate)
+    const currentDateObj = new Date(currentDate); // Convert to Date object
+
+    try {
+        let ads;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            ads = await Ad.find({});
+        } else {
+            ads = await Ad.find({ email: userEmail });
+        }
+
+        if (!ads || ads.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+
+
+        let allFilteredAd = [];
+
+
+        ads.forEach(ad => {
+            if (Array.isArray(ad)) {
+                const filtered = ad
+                    .filter(a => a.startDate <= currentDateObj && a.endDate >= currentDateObj)
+                    .map(a => ({ ...a.toObject() }));
+
+                allFilteredAd.push(...filtered);
+
+            } else if (ad && typeof ad === 'object') {
+                console.log("karaoe ", ad.startDate <= currentDateObj)
+                console.log("karaoe ", ad.endDate >= currentDateObj)
+                if (ad.startDate <= currentDateObj && ad.endDate >= currentDateObj) {
+                    const filtered = [{ ...ad.toObject() }];
+
+                    allFilteredAd.push(...filtered);
+
+                }
+            } else {
+                console.error('Unexpected ad type:', ad);
+            }
+        });
+
+        console.log("dumelatwo ", allFilteredAd)
+        if (allFilteredAd.length === 0) {
+            return res.status(404).send("No ad data found for the given period");
+        }
+
+        // Remove duplicates
+        const uniqueAd = Array.from(
+            new Map(allFilteredAd.map(a => [a._id.toString(), a])).values()
+        );
+
+
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = {};
+
+            uniqueAd.forEach(ad => {
+                const key = ad[groupBy] || "Unknown";
+                if (!grouped[key]) {
+                    grouped[key] = [];
+                }
+                grouped[key].push(ad);
+            });
+
+            // Now add combineTotal to each ad inside its group
+            Object.keys(grouped).forEach(key => {
+                const total = grouped[key].reduce((sum, ad) => sum + (ad.totalAmount || 0), 0);
+                grouped[key] = grouped[key].map(ad => ({
+                    ...ad,
+                    combineTotal: total
+                }));
+            });
+
+            return res.status(200).json(grouped);
+        }
+
+        // If no grouping, just add combineTotal to each ad
+        const total = uniqueAd.reduce((sum, ad) => sum + (ad.totalAmount || 0), 0);
+        const adsWithTotal = uniqueAd.map(ad => ({
+            ...ad,
+            combineTotal: total
+        }));
+
+        return res.status(200).json(adsWithTotal);
+
+
+    } catch (err) {
+        console.error("Error fetching ad data:", err);
+        res.status(500).send("Server error");
+    }
+});
+
+/*router.get("/allAd", async (req, res) => {
     const { period } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
@@ -1067,9 +1809,9 @@ router.get("/allAd", async (req, res) => {
         console.error('Error fetching ad data:', err);
         res.status(500).send('Server error');
     }
-});
+});*/
 
-router.get("/adCost", async (req, res) => {
+/*router.get("/adCost", async (req, res) => {
     const { period } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
@@ -1100,10 +1842,75 @@ router.get("/adCost", async (req, res) => {
         console.error('Error fetching ad data:', err);
         res.status(500).send('Server error');
     }
+});*/
+
+router.get("/activeAd", async (req, res) => {
+    const { userId, userRole, groupBy, currentDate } = req.query;
+    const currentDateObj = new Date(currentDate); // Convert to Date object
+
+    try {
+        let users;
+
+        if (userRole === "superAdmin" || userRole === "admin") {
+            users = await User.find({}).populate("ad").exec();
+        } else {
+            users = await User.find({ _id: userId }).populate("ad").exec();
+        }
+
+        if (!users || users.length === 0) {
+            return res.status(404).send("No users found");
+        }
+
+        let allFilteredAd = [];
+
+        users.forEach(user => {
+            if (Array.isArray(user.ad)) {
+                const filtered = user.ad
+                    .filter(ads => ads.startDate >= currentDateObj && ads.endDate <= currentDateObj)
+                    .map(ads => ({
+                        ...ads.toObject(),
+                    }));
+
+                allFilteredAd.push(...filtered);
+            }
+        });
+
+        if (allFilteredAd.length === 0) {
+            return res.status(404).send("No ad data found for the given period");
+        }
+
+        // Remove duplicates
+        const uniqueAd = Array.from(
+            new Map(allFilteredAd.map(a => [a._id.toString(), a])).values()
+        );
+
+        // 👇 Combine total (example: summing all prices)
+        const combineTotal = uniqueAd.reduce((sum, ad) => {
+            return sum + (ad.price || 0); // Replace `price` with the field you want to total
+        }, 0);
+
+        if (groupBy && groupBy !== "none") {
+            const grouped = uniqueAd.reduce((acc, curr) => {
+                const key = curr[groupBy] || "Unknown";
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(curr);
+                return acc;
+            }, {});
+
+            return res.status(200).json({ grouped, combineTotal });
+        }
+
+        return res.status(200).json({ ads: uniqueAd, combineTotal });
+
+    } catch (err) {
+        console.error("Error fetching ad data:", err);
+        res.status(500).send("Server error");
+    }
 });
 
 
-router.get("/activeAd", async (req, res) => {
+
+/*router.get("/activeAd", async (req, res) => {
     const { period } = req.query;
     const { startDate, endDate } = getDateRange(period);
 
@@ -1134,7 +1941,7 @@ router.get("/activeAd", async (req, res) => {
         console.error('Error fetching ad data:', err);
         res.status(500).send('Server error');
     }
-});
+});*/
 
 router.get("/feedbackRating", async (req, res) => {
     const { period } = req.query;

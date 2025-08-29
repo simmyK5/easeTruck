@@ -54,28 +54,29 @@ const AdPayment = ({ open, totalAmount, userEmail,selectedImage, items, onClose,
       const getUser = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/users/${userEmail}`);
       const email = getUser.data.email; // Assuming `getUser.data.email` contains the user's email
       // Post the order details to the backend to capture the order
-      console.log(items)
+      console.log(data.orderID)
       console.log("pabi cooper")
-      console.log( items[0].unit_amount.value)
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/backend/ad/capture-order`, {
-        orderID: data.orderID,  // PayPal order ID
-        adName: items[0].name,
-        adCurreny: items[0].unit_amount.currency_code,
-        adUnitAmount: items[0].unit_amount.value,
-        adQuantity: items[0].quantity,            // Pass the items array with ad details
-        adDescription: items[0].description,
-        adLink: items[0].link,
-        adStartDate: items[0].start_date,
-        adEndDate: items[0].end_date,
-        adType: items[0].ad_type,
-        adActive: items[0].active,
-        totalAmount: totalAmount,  // Pass the total amount calculated on the frontend
-        email: email,     
-        imagePath: selectedImage,       // Send the user's email to associate the order
-      },{
-        headers: {
-          'Content-Type': 'multipart/form-data', // Set the correct content type for file uploads
-        }});
+      console.log( selectedImage)
+      const formData = new FormData();
+formData.append('orderID', data.orderID);
+formData.append('adName', items[0].name);
+formData.append('adCurreny', items[0].unit_amount.currency_code);
+formData.append('adUnitAmount', items[0].unit_amount.value);
+formData.append('adQuantity', items[0].quantity);
+formData.append('adDescription', items[0].description);
+formData.append('adLink', items[0].link);
+formData.append('adStartDate', items[0].start_date);
+formData.append('adEndDate', items[0].end_date);
+formData.append('adType', items[0].ad_type);
+formData.append('adActive', items[0].active);
+formData.append('totalAmount', totalAmount);
+formData.append('email', email);
+formData.append('imagePath', selectedImage); // selectedImage must be a File object
+
+await axios.post(`${import.meta.env.VITE_API_BASE_URL}/backend/ad/capture-order`, formData, {
+  headers: formData.getHeaders ? formData.getHeaders() : { 'Content-Type': 'multipart/form-data' }
+});
+
   
       // Check if the capture was successful (assuming the backend responds with a success indicator)
       alert('Ad payment successful!');

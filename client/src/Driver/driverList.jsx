@@ -4,7 +4,6 @@ import axios from 'axios';
 import { DeleteOutline, EditOutlined } from '@mui/icons-material';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Box, Typography } from '@mui/material';
 import { useAuth0 } from '@auth0/auth0-react';
-import DriverSubscription from '../subscription/driverSubscription';
 import './driverList.css';
 
 const DriverList = () => {
@@ -21,6 +20,7 @@ const DriverList = () => {
     const { user, getIdTokenClaims } = useAuth0();
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [errors, setErrors] = useState({});
+    const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -39,7 +39,11 @@ const DriverList = () => {
 
     const handleSubscribe = async (plan) => {
         setSelectedPlan(plan);
-        setOpenModal(true);
+
+        if(selectedPlan && formData && userDetail){
+            handleRedirect();
+        }
+        
     };
 
     useEffect(() => {
@@ -168,11 +172,6 @@ const DriverList = () => {
         });
         if (!valid) return;
 
-        if (isEditing === "add" && !isSubscribed) {
-            alert('Please subscribe to a plan before saving your profile.');
-            return;
-        }
-
         try {
             if (isEditing === "edit") {
                 await axios.put(`${import.meta.env.VITE_API_BASE_URL}/backend/user/${formData._id}`, formData);
@@ -203,7 +202,7 @@ const DriverList = () => {
         const roleBasedPlans = {
             driver: [
                 { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-                { title: 'Driver Plan', price: 29.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], planId: import.meta.env. VITE_DRIVER_PLAN_SUBSCRIPTION },
+                { title: 'Driver Plan', price: 50.00, features: ['Feature 1', 'Feature 2', 'Feature 3'], planId: import.meta.env. VITE_DRIVER_PLAN_SUBSCRIPTION },
             ],
         };
 
@@ -213,7 +212,7 @@ const DriverList = () => {
                 {plans.map((plan) => (
                     <Box key={plan.planId} my={2} p={2} border={1} borderRadius={4}>
                         <Typography variant="h6">{plan.title}</Typography>
-                        <Typography variant="body1">Price: ${plan.price}</Typography>
+                        <Typography variant="body1">Price: R{plan.price}</Typography>
                         <Typography variant="body2">Features:</Typography>
                         <ul>
                             {plan.features.map((feature, index) => (
@@ -229,6 +228,64 @@ const DriverList = () => {
             </Box>
         );
     };
+
+    useEffect(() => {
+        // Dynamically load PayFast script if it's not available
+        const script = document.createElement('script');
+        script.src = 'https://www.payfast.co.za/button/subscribe'; // This is an example, check the official SDK URL
+        script.async = true;
+        document.body.appendChild(script);
+    
+        return () => {
+          document.body.removeChild(script);
+        };
+      }, []);
+    
+    
+    
+      const handleRedirect = () => {
+        setIsProcessing(true); // Disable the button
+    
+        // Create form
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = 'https://sandbox.payfast.co.za/eng/process';
+    
+        // Helper to add hidden input
+        const addInput = (name, value) => {
+          const input = document.createElement('input');
+          input.type = 'hidden';
+          input.name = name;
+          input.value = value;
+          form.appendChild(input);
+        };
+    
+        // Add required PayFast fields
+        addInput('merchant_id', import.meta.env.VITE_PAYFAST_MERCHANT_ID);
+        addInput('merchant_key', import.meta.env.VITE_PAYFAST_MERCHANT_KEY);
+        addInput('return_url', import.meta.env.VITE_PAYFAST_RETURN_URL);
+        addInput('cancel_url', import.meta.env.VITE_PAYFAST_CANCEL_URL);
+        addInput('notify_url', import.meta.env.VITE_PAYFAST_DRIVER_NOTIFY_URL);
+        addInput('amount', selectedPlan.price);
+        addInput('item_name', selectedPlan.title);
+        addInput('email_address', formData.email);
+        addInput('subscription_type', '1');
+        addInput('billing_date', new Date().toISOString().split('T')[0]);
+        addInput('recurring_amount', selectedPlan.price);
+        addInput('frequency', '3');
+        addInput('cycles', '0');
+        addInput('name_first', formData.firstName);
+        addInput('name_last', formData.lastName);
+        addInput('custom_str1', formData.userRole);
+        addInput('custom_str2', userDetail._id);
+    
+        // Append and submit
+        document.body.appendChild(form);
+        form.submit();
+    
+        // Optional: clean up and re-enable
+        setIsProcessing(false);
+      };
 
     return (
         <div className="driver-list-container">
@@ -315,21 +372,13 @@ const DriverList = () => {
                         {renderSubscriptionOptionsBelowButton()}
                         <DialogActions>
                             <Button onClick={handleClose} color="primary" data-testid="cancelBtn">Cancel</Button>
-                            <Button onClick={handleSubmit} type="submit" color="primary" data-testid="submitBtn">
+                            <Button onClick={handleSubmit} type="submit" color="primary" data-testid="submitBtn" disabled={isEditing === "add"}>
                                 {isEditing === "edit" ? 'Update' : 'Add'}
                             </Button>
                         </DialogActions>
                     </form>
                 </DialogContent>
             </Dialog>
-            <DriverSubscription
-                open={openModal}
-                plan={selectedPlan}
-                userEmail={formData.email}
-                profileData={{ ...formData, vehicleOwnerId: userDetail._id }}
-                setIsSubscribed={setIsSubscribed}
-                onClose={() => setOpenModal(false)}
-            />
         </div>
     );
 };

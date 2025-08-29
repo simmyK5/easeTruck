@@ -82,7 +82,7 @@ const ItemList = ({ navigateToCategory }) => {
     };
 
     const handleViewAll = (category) => {
-        setViewingCategory(category); 
+        setViewingCategory(category);
     };
 
     useEffect(() => {
@@ -96,7 +96,7 @@ const ItemList = ({ navigateToCategory }) => {
             filtered = filtered.filter(
                 (item) =>
                     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    item.content.toLowerCase().includes(searchQuery.toLowerCase())
+                    item.description.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
@@ -116,13 +116,13 @@ const ItemList = ({ navigateToCategory }) => {
                     fullWidth
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    
+
                 />
 
                 <Button
                     variant="contained"
                     onClick={handleCategoryClick}
-                   
+
                 >
                     {selectedCategories.length > 0
                         ? `Selected (${selectedCategories.length})`
@@ -168,15 +168,15 @@ const ItemList = ({ navigateToCategory }) => {
                             <Box className="category-items">
                                 {categoryItems.map((item) => ( // Show all items when viewing a category
                                     <Card key={item._id} className="card">
-                                        <CardMedia
-                                            component="img"
-                                            height="140"
-                                            src="https://easetruckbackend-emfbc9dje7hdargb.uaenorth-01.azurewebsites.net/uploads/20250329185258170_OIP%20(1).jpg"
-
-                                            alt={item.title}
-                                        />
-                                        {console.log("all good",`${import.meta.env.VITE_API_BASE_URL}/uploads/${encodeURIComponent(item.imagePath.split('/').pop())}`)}
-
+                                        <a href={item.linkUrl} target="_blank" rel="noopener noreferrer">
+                                            <CardMedia
+                                                component="img"
+                                                crossorigin="anonymous"
+                                                src={`http://localhost:8800/uploadFile/${encodeURIComponent(item.imagePath.split('/').pop())}`}
+                                                alt={item.title}
+                                                sx={{ width: '100%', height: 140, objectFit: 'cover' }}
+                                            />
+                                        </a>
                                         <CardContent>
                                             <Typography variant="h6" noWrap>
                                                 {item.title}
@@ -186,6 +186,8 @@ const ItemList = ({ navigateToCategory }) => {
                                             </Typography>
                                         </CardContent>
                                     </Card>
+
+
                                 ))}
                             </Box>
                             <Box className="category-buttons">

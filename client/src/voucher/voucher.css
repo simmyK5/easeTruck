@@ -1,0 +1,67 @@
+/* General Page Styles */
+.voucher-list-container {
+    background-color: white;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  /* Flex Container for Search and Button */
+  .flex-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px; /* Space between the search bar and button */
+    margin-bottom: 20px; /* Space between the search bar and the DataGrid */
+  }
+  
+  /* Box containing the search bar and button */
+  .box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Styling the search bar */
+  .search-bar {
+    width: 250px;
+    background-color: #f1f1f1; /* Light grey background */
+  }
+  
+  /* Button styling */
+  button {
+    background-color: #3f51b5; /* Primary button color */
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #303f9f; /* Darker shade on hover */
+  }
+  
+  /* DataGrid Styling */
+  .data-grid {
+    width: 112%;  /* Increased width by 40% from 80% to 112% */
+    max-width: 1260px;  /* Increased max width by 40% from 900px to 1260px */
+    height: 420px;  /* Increased height by 40% from 300px to 420px */
+    background-color: #f1f1f1; /* Light grey background for DataGrid */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 20px; /* Space between the button/search and DataGrid */
+  }
+  /* Dialog and Modal Styling */
+  .dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .text-field {
+    margin-bottom: 10px;
+  }
+  
+
+  

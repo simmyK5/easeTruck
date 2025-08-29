@@ -40,7 +40,7 @@ const InstallationSchema = new mongoose.Schema({
         type: String,
         max: 500
     },
-   
+
     items: {
         type: Array,
     },
@@ -48,23 +48,22 @@ const InstallationSchema = new mongoose.Schema({
     totalAmount: {
         type: Number,
     },
-    technician:  {
+    technician: {
         type: String,
         max: 500
     },
     address: {
-        address_line_1: { type: String, required: true },
-        address_line_2: { type: String},
-        admin_area_2: { type: String, required: true },
-        admin_area_1: { type: String },//province
-        postal_code: { type: String, required: true },
-        country_code: { type: String, required: true },
-      },
+        type: String,
+        max: 500
+    },
+    outstandingInstallation: {
+        type: Boolean
+    },
 
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 
-    
+
 
 },
     { timestamps: true }

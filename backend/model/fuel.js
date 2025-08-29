@@ -11,5 +11,20 @@ const fuelSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }); 
   
-    
+  fuelSchema.pre('save', async function (next) {
+      if (!this.userId && this.serialNumber) {
+          try {
+              const Truck = mongoose.model('Truck');
+              const truckInfo = await Truck.findOne({ serialNumber: this.serialNumber });
+  
+              if (truckInfo) {
+                  this.userId = truckInfo.driverId;
+              }
+          } catch (error) {
+              return next(error); // Pass error to save handler
+          }
+      }
+  
+      next();
+  });
   module.exports = mongoose.model('Fuel', fuelSchema); 

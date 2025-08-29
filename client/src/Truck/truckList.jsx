@@ -53,28 +53,37 @@ const TruckList = () => {
 
     const fetchItems = useCallback(async () => {
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/truck/${userDetail._id}`);
-
-            const trucks = await Promise.all(response.data.map(async truck => {
-                const driverResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/${truck.driver}`);
-                const driver = driverResponse.data;
-                return {
-                    id: truck._id,
-                    driverId: truck.driverId,
-                    driverName: `${driver.firstName} ${driver.lastName}`,
-                    make: truck.make,
-                    model: truck.model,
-                    year: truck.year,
-                    numberPlate: truck.numberPlate,
-                    status: truck.status,
-                    serialNumber: truck.serialNumber,
-                };
-            }));
-            setRows(trucks);
+          const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/truck/${userDetail._id}`);
+      
+          const trucks = await Promise.all(response.data.map(async truck => {
+            let driverName = 'No driver';
+            try {
+              const driverResponse = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/${truck.driver}`);
+              const driver = driverResponse.data;
+              driverName = `${driver.firstName} ${driver.lastName}`;
+            } catch (err) {
+              console.warn(`No driver found for truck ${truck._id}`, err.message);
+            }
+      
+            return {
+              id: truck._id,
+              driverId: truck.driver,
+              driverName,
+              make: truck.make,
+              model: truck.model,
+              year: truck.year,
+              numberPlate: truck.numberPlate,
+              status: truck.status,
+              serialNumber: truck.serialNumber,
+            };
+          }));
+      
+          setRows(trucks);
         } catch (error) {
-            console.error('Error fetching items:', error);
+          console.error('Error fetching trucks:', error);
         }
-    }, [userDetail]);
+      }, [userDetail]);
+      
 
 
     const fetchDrivers = useCallback(async () => {

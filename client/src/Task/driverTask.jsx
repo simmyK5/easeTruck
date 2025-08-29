@@ -1,9 +1,9 @@
-import React, { useState, useEffect,useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import axios from 'axios';
 import { useAuth0 } from '@auth0/auth0-react';
 import { VisibilityOutlined, EditOutlined } from "@mui/icons-material";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Tabs,  Tab, Box, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Tabs, Tab, Box, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import './driverTask.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,12 +14,12 @@ const DriverTask = () => {
     const [searchText, setSearchText] = useState('');
     const [filteredRows, setFilteredRows] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
-    const { user} = useAuth0();
+    const { user } = useAuth0();
     const [tabIndex, setTabIndex] = useState(0);
     const [files, setFiles] = useState({ onload: null, offload: null, document3: null });
     const [userDetail, setUserDetails] = useState({ _id: '', firstName: '', lastName: '', email: '', userRole: '', isLive: '', vehicleOwnerId: '' });
     const navigate = useNavigate();
-   
+
 
     const handleFileChange = (event, fileType) => {
         const selectedFile = event.target.files[0]; // Get the selected file
@@ -65,7 +65,7 @@ const DriverTask = () => {
         if (userDetail) {
             fetchItems(userDetail._id);
         }
-    }, [userDetail,fetchItems]);
+    }, [userDetail, fetchItems]);
 
     useEffect(() => {
         setFilteredRows(
@@ -78,7 +78,7 @@ const DriverTask = () => {
         );
     }, [searchText, rows]);
 
-   
+
 
     const handleClose = () => {
         setOpen(false);
@@ -102,24 +102,15 @@ const DriverTask = () => {
 
                 // Append each file to the form data
                 Object.keys(files).forEach(fileType => {
-                    console.log(fileType)
-                    if (files[fileType]) {
-                        form.append(fileType, files[fileType]);
+                    const file = files[fileType];
+                    if (file && file instanceof File) {
+                        form.append(fileType, file);
                     }
                 });
 
-                /*Object.keys(files).forEach(fileType => {
-                    if (files[fileType]) {
-                        console.log(files[fileType].name)
-                        const fileName = files[fileType].name; // Get file name
-                        const fileExtension = fileName.split('.').pop(); // Extract file extension
-                        const uniqueFileName = `${Date.now()}_${fileType}.${fileExtension}`; // Unique file name
-                
-                        console.log(`Appending ${fileType}: ${uniqueFileName}`);
-                
-                        form.append(fileType, files[fileType], uniqueFileName); // Append file with new name
-                    }
-                });*/
+
+
+
                 console.log("see something", formData)
 
                 // Append other form data
@@ -176,13 +167,11 @@ const DriverTask = () => {
     };
 
     const columns = [
-        { field: '_id', headerName: 'ID', width: 250 },
-        { field: 'vehicleOwnerId', headerName: 'Vehicle Owner', width: 150 },
-        { field: 'driverId', headerName: 'Driver Id', width: 250 },
-        { field: 'numberPlate', headerName: 'Number Plate', width: 90 },
-        { field: 'startPoint', headerName: 'Start Point', width: 150 },
-        { field: 'endPoint', headerName: 'End Point', width: 150 },
-        { field: 'status', headerName: 'Status', width: 150 },
+        { field: 'numberPlate', headerName: 'Number Plate', width: 90, editable: true },
+        { field: 'startPoint', headerName: 'Start Point', width: 150, editable: true },
+        { field: 'endPoint', headerName: 'End Point', width: 150, editable: true },
+        { field: 'status', headerName: 'Status', width: 150, editable: true },
+        { field: 'loadCapacity', headerName: 'Load Capacity', width: 150, editable: true },
         {
             field: "actions", headerName: "Actions", width: 150,
             renderCell: (params) => (
@@ -204,9 +193,6 @@ const DriverTask = () => {
             ),
         },
     ];
-
-    console.log(formData.fileUrls[0])
-    console.log(formData.fileUrls[1])
 
     return (
         <div className="task-list-container">
@@ -311,9 +297,15 @@ const DriverTask = () => {
                                     disabled={isEditing === "view"}  // Completely disable the file input when 'view' mode
                                     data-testid="onLoadReceipt"
                                 />
+
                                 {formData.fileUrls[0] && (
                                     <Typography variant="body2" style={{ marginTop: "10px" }}>
-                                        <a href={`${import.meta.env.VITE_API_BASE_URL}${formData.fileUrls[0].url}`} target="_blank" rel="noopener noreferrer">
+                                        <a
+                                            href={`http://localhost:8800/uploadFile/uploads/${encodeURIComponent(formData.fileUrls[0].url.split('/').pop())}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            crossOrigin="anonymous"
+                                        >
                                             View onload
                                         </a>
                                     </Typography>
@@ -337,29 +329,20 @@ const DriverTask = () => {
                                     disabled={isEditing === "view"}  // Completely disable the file input when 'view' mode
                                     data-testid="offLoadReciept"
                                 />
-                                 {formData.fileUrls[1] && (
+
+                                {formData.fileUrls[1] && (
                                     <Typography variant="body2" style={{ marginTop: "10px" }}>
-                                        <a href={`${import.meta.env.VITE_API_BASE_URL}${formData.fileUrls[1].url}`} target="_blank" rel="noopener noreferrer">
-                                            View onload
+                                        <a
+                                            href={`http://localhost:8800/uploadFile/uploads/${encodeURIComponent(formData.fileUrls[1].url.split('/').pop())}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            crossOrigin="anonymous"
+                                        >
+                                            View offload
                                         </a>
                                     </Typography>
                                 )}
-                            </div>
-                            <div>
-                                <Typography variant="subtitle1">Document 3</Typography>
-                                <TextField
-                                    type="file"
-                                    variant="outlined"
-                                    fullWidth
-                                    onChange={(e) => handleFileChange(e, 'document3')}
-                                    InputLabelProps={{ shrink: true }}
-                                    InputProps={{
-                                        readOnly: isEditing === "view",  // Prevent input when 'view' mode
-                                    }}
-                                    disabled={isEditing === "view"}  // Completely disable the file input when 'view' mode
-                                    data-testid="downloadThree"
-                                />
-                                {files.document3 && <Typography variant="body2">{files.document3.name}</Typography>}
+
                             </div>
 
                             <DialogActions>

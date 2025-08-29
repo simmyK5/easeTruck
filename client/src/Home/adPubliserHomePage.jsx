@@ -10,6 +10,8 @@ import LoadNumGraph from '../Dashboard/loadNumGraph';
 import RecentActivity from '../recentActivity/recentActivity';
 import ServiceCalender from '../recentActivity/serviceCalender';
 import NotificationAlert from '../notification/notificationAlert';
+import Ad from '../Ad/ad';
+import AdDashboard from '../Dashboard/adDashboard';
 
 
 
@@ -63,40 +65,18 @@ const AdPublisherHomePage = () => {
                         <Typography variant="body1" paragraph>
                             This is the homepage of the Streamlined Trucking app. Here you can manage your fleet, track shipments, and more.
                         </Typography>
+                        <Ad/>
                     </Container>
 
                     <Container className="dashboard-section">
                         <Typography variant="h4" gutterBottom>Real-Time Dashboard</Typography>
-                        <Box className="dashboard-form">
-                            <FormControl fullWidth data-testid="periodFormControl">
-                                <InputLabel>Period</InputLabel>
-                                <Select value={period} onChange={(e) => setPeriod(e.target.value)} data-testid="periodSelect">
-                                    <MenuItem value="today" data-testid="periodToday">Today</MenuItem>
-                                    <MenuItem value="week" data-testid="periodWeek">This Week</MenuItem>
-                                    <MenuItem value="month" data-testid="periodMonth">This Month</MenuItem>
-                                    <MenuItem value="4months" data-testid="periodFourMonth">Last 4 Months</MenuItem>
-                                    <MenuItem value="year" data-testid="periodYear">This Year</MenuItem>
-                                </Select>
-                            </FormControl>
-                            <Button variant="contained" color="primary" onClick={handleDownload} className="download-button" data-testid="downloadBtn">
-                                Download Report
-                            </Button>
-                        </Box>
 
-                        {userDetails && period && (
+                        {userDetails && (
                             <Grid container spacing={3} style={{ width: '100%' }}>
                                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <AccelerationGraph userId={userDetails._id} period={period} />
+                                    <AdDashboard userId={userDetails._id} userRole={userDetails.userRole}/>
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <FuelGraph userId={userDetails._id} period={period} />
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <IdleTimeGraph userId={userDetails._id} period={period} />
-                                </Grid>
-                                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                                    <LoadNumGraph userId={userDetails._id} period={period} />
-                                </Grid>
+                                
                             </Grid>
                         )}
                     </Container>

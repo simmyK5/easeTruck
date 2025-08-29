@@ -20,6 +20,7 @@ const Task = require('../model/task');
 const { DateTime } = require('luxon');
 const Installation = require('../model/installation');
 const Message = require('../model/message');
+const ClaimVoucher = require('../model/claimVoucher');
 
 
 router.get('/recentTask', async (req, res) => {
@@ -52,20 +53,40 @@ router.get('/recentTask', async (req, res) => {
     }
 });
 
+router.get('/recentClaimVoucher', async (req, res) => {
+    const { userId } = req.query;
+    console.log("We willing",userId)
+    
+    try {
+        const claimVouchers = await ClaimVoucher.find({ clientId: userId }).sort({ createdAt: -1 }).limit(5);      
+        console.log("steps",claimVouchers)
+        if (!claimVouchers) {
+            return res.status(404).send('Claim Voucher not found');
+        }
+
+
+        // Respond with the last five tasks
+        res.status(200).json(claimVouchers);
+    } catch (err) {
+        console.error('Error fetching recent tasks:', err);
+        res.status(500).send('Server error');
+    }
+});
+
 router.get('/recentInstallation', async (req, res) => {
     const { userId } = req.query;
 
     try {
         // Find the user and populate tasks data
         const installations = await Installation.find({ technician: userId })
-        .sort({ createdAt: -1 })  // Sort by createdAt in descending order
-        .limit(5);  // Limit the results to 5
+            .sort({ createdAt: -1 })  // Sort by createdAt in descending order
+            .limit(5);  // Limit the results to 5
 
         if (!installations) {
             return res.status(404).send('installations not found');
         }
 
-        
+
 
         // Respond with the last five tasks
         res.status(200).json(installations);
@@ -77,7 +98,7 @@ router.get('/recentInstallation', async (req, res) => {
 
 router.get("/recentBreakDownData", async (req, res) => {
     const { userId } = req.query;
-   
+
 
     try {
         const user = await User.findById(userId);
@@ -90,16 +111,16 @@ router.get("/recentBreakDownData", async (req, res) => {
         if (!messages || messages.length === 0) {
             return res.status(404).send('No messages found');
         }
-      
+
         // Collect all breakdown notes with number plate and timestamp
         const breakdownNotes = [];
 
         messages.forEach(message => {
-          
+
             message.callLog.forEach(callLog => {
-               
+
                 callLog.notes.forEach(note => {
-                   
+
                     if (note.breakdown === true && note.numberPlate) {
                         breakdownNotes.push({
                             numberPlate: note.numberPlate,
@@ -124,7 +145,78 @@ router.get("/recentBreakDownData", async (req, res) => {
     }
 });
 
+router.get("/serviceDue", async (req, res) => {
+    const { userId } = req.query;
+    console.log("see what", userId);
+  
+    const MILEAGE_THRESHOLDS = [25000, 30000, 35000];
+  
+    try {
+      // Fetch trucks without trying to limit/populate serviceDue
+      const trucks = await Truck.find({
+        $or: [
+          { driver: userId },
+          { vehicleOwner: userId }
+        ]
+      }).populate(["driver", "vehicleOwner", "serviceDue"]).exec();
+  
+      if (!trucks || trucks.length === 0) {
+        return res.status(404).send("User not found or no trucks available");
+      }
+  
+      const dueTrucks = [];
+  
+      for (const truck of trucks) {
+        const { _id, numberPlate, make, model, year, driver, vehicleOwner } = truck;
+  
+        // Manually sort serviceDue and pick the latest
+        const latestService = [...(truck.serviceDue || [])]
+          .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
 
+          console.log("dubia", latestService);
+  
+        if (!latestService || !latestService.mileage) continue;
+  
+        const mileage = latestService.mileage;
+        const roundedMileage = Math.round(mileage / 100) * 100;
+        const matchThreshold = MILEAGE_THRESHOLDS.find(t => t === roundedMileage);
+  
+        if (!matchThreshold) continue;
+  
+        if (
+          (!vehicleOwner?.firstName || !vehicleOwner?.lastName) &&
+          (!driver?.firstName || !driver?.lastName)
+        ) {
+          console.log(`Missing user data for truck ${_id}`);
+          continue;
+        }
+  
+        dueTrucks.push({
+          numberPlate,
+          make,
+          model,
+          year,
+          mileage,
+          driverName: `${driver?.firstName || ''} ${driver?.lastName || ''}`.trim(),
+        });
+      }
+  
+      if (dueTrucks.length === 0) {
+        return res.status(204).send(); // No content
+      }
+  
+      res.status(200).json(dueTrucks);
+  
+    } catch (err) {
+      console.error("Error fetching service data:", err);
+      res.status(500).send("Server error");
+    }
+  });
+  
+  
+  
+
+/*
 router.get("/recentCalender", async (req, res) => {
     const { userId } = req.query;
 
@@ -190,7 +282,7 @@ router.get("/recentCalender", async (req, res) => {
         console.error('Error fetching service data:', err);
         res.status(500).send('Server error');
     }
-});
+});*/
 
 
 /*router.get("/recentCalender", async (req, res) => {
@@ -246,8 +338,6 @@ router.get("/recentCalender", async (req, res) => {
         res.status(500).send('Server error');
     }
 });*/
-
-module.exports = router;
 
 
 /*router.get("/recentCalender", async (req, res) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect } from 'react';
 import { Modal, Box, Button, IconButton } from '@mui/material';
 import CloseOutlined from '@mui/icons-material/CloseOutlined';
 import axios from 'axios';
@@ -61,19 +61,34 @@ const Ad = () => {
             >
                 <Slider {...settings}>
                     {ads.map((item, index) => (
-                        <div key={index}>
-                            <img
-                                src={`${item.imagePath}`}
-                                alt={item.title}
-                                style={{
-                                    width: '100%', // Make sure image covers the full width of the container
-                                    height: '100%', // Set image height to fit the container
-                                    objectFit: 'cover', // Ensure the image covers the area without distorting
-                                }}
-                            />
+                        <div
+                            key={index}
+                            style={{
+                                width: '100%',
+                                height: '300px', // Adjust height as needed
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                backgroundColor: '#f9f9f9', // Optional: background for better contrast
+                            }}
+                        >
+                            <a href={item.linkUrl} target="_blank" rel="noopener noreferrer">
+                                <img
+                                    crossorigin="anonymous"
+                                    src={`http://localhost:8800/uploadFile/${encodeURIComponent(item.imagePath.split('/').pop())}`}
+                                    alt={item.title}
+                                    style={{
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        objectFit: 'contain',
+                                    }}
+                                />
+                            </a>
                         </div>
                     ))}
                 </Slider>
+
+
                 <Button
                     data-testid="learnMore"
                     color="secondary"

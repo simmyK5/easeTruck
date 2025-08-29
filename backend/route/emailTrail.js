@@ -11,6 +11,7 @@ const User = require('../model/user');
 // POST /backend/email/trail
 router.post('/trail', async (req, res) => {
     try {
+        console.log(req.body)
         const { to, from, subject, message } = req.body;
         const emailTrail = new EmailTrail({ to, from, subject, message });
         await emailTrail.save();

@@ -35,6 +35,9 @@ const TermsAndConditions = ({ open, handleClose, setAgreedToTandC, userEmail }) 
         console.error("Error updating Terms and Conditions:", error);
         setError("Error completing subscription, please try again.");
       }
+    }else{
+      setAgreedToTandC(false)
+      handleClose(); // Close the dialog
     }
   };
 
@@ -53,7 +56,7 @@ const TermsAndConditions = ({ open, handleClose, setAgreedToTandC, userEmail }) 
         <Button onClick={handleClose} color="primary">
           Cancel
         </Button>
-        <Button onClick={handleAgreeClick} color="primary" disabled={!checked}>
+        <Button onClick={handleAgreeClick} color="primary">
           Agree
         </Button>
       </DialogActions>

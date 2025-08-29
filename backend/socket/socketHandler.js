@@ -1,6 +1,13 @@
 const Message = require('../model/message');
 const Map = require('../model/map');
 const User = require('../model/user');
+const Note = require('../model/note');
+const Puncher = require('../model/puncher');
+const Weapon = require('../model/weapon');
+const GlassBreak = require('../model/glassBreak');
+const People = require('../model/people');
+const HistoryLocation = require('../model/historyLocation');
+
 
 function socketHandler(io) {
     io.on('connection', (socket) => {
@@ -13,6 +20,7 @@ function socketHandler(io) {
         // Start a new conversation or join an existing one
         socket.on('startConversation', async ({ userIds }) => {
             const chatId = [...userIds].sort().join('-'); // Generate unique chatId based on users
+            console.log("before emit ", chatId)
             socket.join(chatId);
             socket.emit('conversationStarted', { chatId });
             usersInChats[chatId] = userIds;
@@ -69,12 +77,15 @@ function socketHandler(io) {
 
         socket.on('sendMessage', async ({ chatId, senderId, content, participants }) => {
             try {
-                
-                console.log("chatId backend",chatId)
+                console.log("ama memes")
+                console.log("chatId backend", chatId)
+                console.log("senderId backend", senderId)
+                console.log("content backend", content)
+                console.log("participants backend", participants)
 
                 // Check if the chat exists
                 let message = await Message.findOne({ chatId });
-console.log("messsage backend",message)
+                console.log("messsage backend", message)
                 if (message) {
                     // If chat exists, add the message to the message array
                     message.content.push({
@@ -87,7 +98,6 @@ console.log("messsage backend",message)
                     message = new Message({
                         chatId,
                         senderId,
-                        notes: [],
                         content: { senderId, content },
                         usersInConversation: participants[0]._id// add all users in the conversation
                     });
@@ -96,7 +106,7 @@ console.log("messsage backend",message)
                 }
 
                 await message.save();
-                socket.to(chatId).emit('newMessage', message);
+                socket.to(chatId).emit('messageReceived', message);
             } catch (error) {
                 console.error("Error adding message:", error);
             }
@@ -204,41 +214,29 @@ console.log("messsage backend",message)
             }
         });
 
-        socket.on('sendNotes', async ({ chatId, senderId, note, breakdown,numberPlate, noteId }) => {
+        socket.on('sendNotes', async ({ chatId, senderId, note, breakdown, numberPlate, noteId }) => {
             try {
-                // Check if the chat exists
-                let newNote = await Message.findOne({ chatId });
-                if (newNote) {
+                console.log("progress chatid", chatId)
+                console.log("progress senderid", senderId)
+                console.log("progress note", note)
+                console.log("progress breakdown", breakdown)
+                console.log("progress numberplate", numberPlate)
+                console.log("progress noteid", noteId)
+                const newNote = new Note({
+                    chatId,
+                    senderId,
+                    note,
+                    breakdown,
+                    numberPlate,
+                    noteId
+                });
 
-                    newNote.callLog.forEach(log => {
-                        if (log) {
-                            if (!Array.isArray(log.notes)) {
-                                log.notes = [];
-                            }
-
-                            //log.breakdown= breakdown,
-                            log.notes.push({
-                                noteId: noteId,
-                                senderId: senderId,
-                                note: note,
-                                numberPlate: numberPlate,
-                                breakdown: breakdown,
-                                timestamp: new Date()
-                            })
-
-                        }
-                    });
-
-                    //await newNote.save();
-                } else {
-                    console.log('No note added');
-                }
-
+                // Save the call to the database
                 await newNote.save();
-                socket.to(chatId).emit('sendNotes', newNote)
 
-            } catch (error) {
-                console.error("Error adding note:", error);
+                console.log('Note saved successfully:', newNote);
+            } catch (err) {
+                console.error('Error saving call:', err);
             }
         });
 
@@ -262,6 +260,85 @@ console.log("messsage backend",message)
             } catch (error) {
                 console.error('Error retrieving messages:', error);
                 socket.emit('error', { message: 'Error retrieving messages' });
+            }
+        });
+
+        socket.on('getPuncher', async ({ role, vehicleOwnerId }, callback) => {
+            try {
+                let punchers;
+                console.log("kilungile", role)
+                console.log("vehicleOwnerId", vehicleOwnerId)
+
+                if (role === 'admin' || role === 'superAdmin') {
+                    punchers = await Puncher.find({}).populate('driverId', 'firstName lastName');
+                } else if (role === 'vehicleOwner') {
+                    punchers = await Puncher.find({ vehicleOwnerId }).populate('driverId', 'firstName lastName');
+                } else {
+                    return callback({ error: 'Access denied' });
+                }
+
+                callback(punchers);
+            } catch (err) {
+                callback({ error: 'Server error', details: err.message });
+            }
+        });
+
+
+        socket.on('getGlassBreak', async ({ role, vehicleOwnerId }, callback) => {
+            try {
+                let glassBreaks;
+
+                if (role === 'admin' || role === 'superAdmin') {
+                    // Admin sees everything
+                    glassBreaks = await GlassBreak.find({}).populate('driverId', 'firstName lastName');
+                } else if (role === 'vehicleOwner') {
+                    // Vehicle owner sees punchers for their drivers
+                    glassBreaks = await GlassBreak.find({ vehicleOwnerId }).populate('driverId', 'firstName lastName');
+                } else {
+                    return res.status(403).json({ error: 'Access denied' });
+                }
+                callback(glassBreaks);
+            } catch (err) {
+                callback({ error: 'Server error', details: err.message });
+            }
+        });
+
+        socket.on('getWeapon', async ({ role, vehicleOwnerId }, callback) => {
+            try {
+                let weapons;
+
+                if (role === 'admin' || role === 'superAdmin') {
+                    // Admin sees everything
+                    weapons = await Weapon.find({}).populate('driverId', 'firstName lastName');
+                } else if (role === 'vehicleOwner') {
+                    // Vehicle owner sees punchers for their drivers
+                    weapons = await Weapon.find({ vehicleOwnerId }).populate('driverId', 'firstName lastName');
+                } else {
+                    return res.status(403).json({ error: 'Access denied' });
+                }
+                callback(weapons);
+            } catch (err) {
+                callback({ error: 'Server error', details: err.message });
+            }
+        });
+
+        socket.on('getPeople', async ({ role, vehicleOwnerId }, callback) => {
+
+            try {
+                let people;
+
+                if (role === 'admin' || role === 'superAdmin') {
+                    // Admin sees everything
+                    people = await People.find({}).populate('driverId', 'firstName lastName');
+                } else if (role === 'vehicleOwner') {
+                    // Vehicle owner sees punchers for their drivers
+                    people = await People.find({ vehicleOwnerId }).populate('driverId', 'firstName lastName');
+                } else {
+                    return res.status(403).json({ error: 'Access denied' });
+                }
+                callback(people);
+            } catch (err) {
+                callback({ error: 'Server error', details: err.message });
             }
         });
 
@@ -290,6 +367,59 @@ console.log("messsage backend",message)
                 socket.emit('error', { message: 'Error retrieving messages' });
             }
         });
+
+
+        // Map to store latest 5 coordinates per device
+        socket.on('locationUpdate', async (data) => {
+            const { truckLocation } = data;
+            const { latitude, longitude, serialNumber } = truckLocation;
+
+            console.log("[LOCATION] Received from device:", truckLocation);
+
+            try {
+                await HistoryLocation.findOneAndUpdate(
+                    { serialNumber },
+                    {
+                        $push: {
+                            coordinates: {
+                                $each: [{ latitude, longitude, timestamp: new Date() }],
+                                $slice: -5 // keep only last 5
+                            }
+                        }
+                    },
+                    { upsert: true, new: true }
+                );
+            } catch (error) {
+                console.error("Failed to save latest coordinates:", error);
+            }
+
+            // Broadcast to frontend/admins
+            io.emit('adminLocationUpdate', truckLocation);
+        });
+
+        /*socket.on('highSpeed', async (data) => {
+            const { truckLocation } = data;
+            console.log("[LOCATION] Received from device:", truckLocation);
+            // Broadcast to frontend/admins
+            io.emit('adminHighSpeed', truckLocation);
+
+            try {
+                // Save to MongoDB
+                const highSpeedRecord = new HighSpeedEvent({
+                    serialNumber: truckLocation.serialNumber,
+                    lat: truckLocation.lat,
+                    lng: truckLocation.lng,
+                    speed: truckLocation.speed,
+                    road: truckLocation.road || 'Unknown',
+                    speedLimit: truckLocation.speedLimit || 0,
+                });
+
+                await highSpeedRecord.save();
+                console.log("[DB] High-speed event saved.");
+            } catch (err) {
+                console.error("[DB ERROR] Could not save high-speed event:", err);
+            }
+        });*/
 
 
         socket.on('makeCall', ({ participants, signal, senderId }) => {
@@ -323,63 +453,27 @@ console.log("messsage backend",message)
         });
 
 
-        // Handle retrieving all messages for a chat
-        /*socket.on('getMessages', async (chatId, callback) => {
-            try {
-                console.log("chatId backend",chatId)
-               // const messages = await Message.find({ chatId, isCall: false || null }).sort({ createdAt: 1 });
-               const messages = await Message.find({ 
-                chatId, 
-                $or: [{ isCall: false }, { isCall: null }] 
-              }).sort({ createdAt: 1 });
-                console.log("message backend",messages)
-                callback(messages.content); // Send the messages back to the client
-            } catch (err) {
-                console.error('Error retrieving messages:', err);
-            }
-        });*/
 
-       /* socket.on('getMessages', async (chatId, callback) => {
-            try {
-                console.log("chatId backend", chatId);
-        
-                // Fetch messages from the database
-                const messages = await Message.find({
-                    chatId,
-                    $or: [{ isCall: false }, { isCall: null }]
-                }).sort({ createdAt: 1 });
-        
-                console.log("messages backend", messages);
-        
-                // Extract the content from each message
-                const messageContents = messages.map(message => message.content).flat(); // Flatten content if it's an array
-        
-                // Send the extracted content back to the client
-                callback(messageContents);
-            } catch (err) {
-                console.error('Error retrieving messages:', err);
-            }
-        });*/
 
         socket.on('getMessages', async (chatId, callback) => {
             try {
                 console.log("chatId backend", chatId);
-        
+
                 // Fetch messages from the database
                 const messages = await Message.find({
                     chatId,
                     $or: [{ isCall: false }, { isCall: null }]
                 }).sort({ createdAt: 1 });
-        
+
                 console.log("messages backend", messages);
-        
+
                 // Create an array to store modified messages with sender names
                 const messageContents = await Promise.all(messages.map(async (message) => {
                     // If content is an array, process it
                     const contentItems = await Promise.all(message.content.map(async (contentItem) => {
                         // Fetch user details based on senderId
                         const user = await User.findById(contentItem.senderId); // Fetching the user based on senderId
-        
+
                         // Return the content item with the sender's name
                         return {
                             content: contentItem.content, // the actual content
@@ -387,22 +481,22 @@ console.log("messsage backend",message)
                             timestamp: contentItem.timestamp || message.timestamp // If timestamp exists in contentItem, use it; else, use message timestamp
                         };
                     }));
-        
+
                     return contentItems;
                 }));
-        
+
                 // Send the message contents with sender's name back to the client
                 callback(messageContents);
             } catch (err) {
                 console.error('Error retrieving messages:', err);
             }
         });
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
 
         // Event to add a new user to the conversation
         socket.on('addUserToChat', async ({ chatId, newUser }) => {
@@ -481,55 +575,7 @@ console.log("messsage backend",message)
             io.to(chatId).emit('userRemoved', { chatId, userId });
         });
 
-        /*socket.on('getSubscriptionStatus', async (email) => {
-            console.log("even connected")
-            
-            try {
-                const user = await User.findOne({ email }).populate('subscription').exec();
-                if (!user) {
-                    socket.emit('subscriptionStatus', false);
-                    return;
-                }
-                console.log("see socketUser")
-                console.log(user)
 
-                const activeSubscription = user.subscription.some(subscription => subscription && subscription.status === 'ACTIVE');
-                socket.emit('subscriptionStatus', activeSubscription);
-            } catch (error) {
-                console.error('Error checking subscription status:', error);
-                socket.emit('subscriptionStatus', false);
-            }
-        });
-
-        socket.on('getUserNav', async (email) => {
-            try {
-                const user = await User.findOne({ email: req.params.email });
-
-                if (!user) {
-                    return res.status(404).send('User not found');
-                }
-                socket.emit('userNav', user);
-            } catch (error) {
-                console.error('Error checking subscription status:', error);
-                socket.emit('subscriptionStatus', false);
-            }
-        });*/
-
-        /*socket.on('checkSubscription', async (email) => {
-            try {
-              const user = await User.findOne({ email }).populate('subscription').exec();
-              if (!user) {
-                socket.emit('subscriptionStatus', false);
-                return;
-              }
-        
-              const activeSubscription = user.subscription.some(subscription => subscription && subscription.status === 'ACTIVE');
-              socket.emit('subscriptionStatus', activeSubscription);
-            } catch (error) {
-              console.error('Error checking subscription status:', error);
-              socket.emit('subscriptionStatus', false);
-            }
-          });*/
 
 
         socket.on('disconnect', () => {

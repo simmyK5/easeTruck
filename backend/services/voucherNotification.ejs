@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Your Driving Voucher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .voucher {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .code {
+            font-size: 1.5em;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .btn {
+            display: inline-block;
+            background: #0056b3;
+            color: #fff;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .footer {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 30px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Hi <%= firstName %>
+                <%= lastName %>,</h2>
+        <div class="header">
+            <h1>You’ve Earned a Driving Voucher!</h1>
+            <p>Great news—because of excellent driving from your drivers, you’ve unlocked a special discount.</p>
+        </div>
+
+        <div class="voucher">
+            <p><strong>Voucher Code:</strong></p>
+            <p class="code">
+                <%= voucherCode %>
+            </p>
+
+            <p><strong>Value:</strong> R <%= voucherValue.toFixed(2) %>
+            </p>
+            <p><strong>Expiry Date:</strong>
+                <%= expiryDate %>
+            </p>
+        </div>
+
+        <h2>How to Redeem</h2>
+        <ol>
+            <li>Visit our <a href="<%= claimdUrl %>">Create Ad</a> page.</li>
+            <li>Enter your voucher code in the “Voucher Code” field and click “Enter”</li>
+            <li>Check your voucher details</li>
+            <li>Click <strong>Claim now</strong> to complete via PayFast.</li>
+        </ol>
+
+        <p>Don’t miss out—voucher expires on <strong>
+                <%= expiryDate %>
+            </strong>.</p>
+        <p>If you need help, reply to this email or contact <a href="mailto:<%= supportEmail %>">
+                <%= supportEmail %>
+            </a>.</p>
+
+        <p>Thank you for choosing us!</p>
+        <p>Best regards,</p>
+        <p><b>EaseTruck</b></p>
+    </div>
+
+</body>
+
+</html>

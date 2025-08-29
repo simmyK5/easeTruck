@@ -1,90 +1,117 @@
-import React from 'react';
-import {  Box, Typography, Container, Paper, Grid } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Container, Paper, Grid } from '@mui/material';
 import './aboutUs.css';
-import Testimonial from './testimonial';
-
+import easeTruckSeven from '/easeTruckSeven.svg';
+import easeTruckThree from '/easeTruckThree.svg';
+import easeTruckLogo from '/easeTruckLogo.svg';
 
 
 const AboutUs = () => {
+    const [activeIndex, setActiveIndex] = useState(0);
 
+    const values = [
+        {
+            title: 'Innovation',
+            description: 'We embrace technology and creativity to provide top-notch solutions.',
+        },
+        {
+            title: 'Commitment',
+            description: ' Our team is dedicated to exceeding customer expectations every step of the way.',
+        },
+        {
+            title: 'Courage',
+            description: ' We strive to face challenges head-on, embracing change and uncertainty with confidence.',
+        },
+        ,
+        {
+            title: 'Trust',
+            description: ' We build lasting relationships by being reliable, transparent, and respectful.',
+        },
+        {
+            title: 'Security',
+            description: 'Safety is our priority with advanced security features.',
+        },
+
+    ];
 
     return (
         <Container className="container">
-            <Paper className="paper" elevation={3}>
-                <Typography variant="h3" className="typography-title" gutterBottom>
-                    About Us 
-                </Typography>
-                <Typography variant="body1" className="typography-body" paragraph>
-                    Welcome to EaseTruck! We are dedicated to providing innovative solutions for truck
-                    management, making logistics easier and more efficient. Our mission is to empower
-                    businesses to manage their fleets seamlessly, optimize operations, and drive success
-                    through advanced technology.
-                </Typography>
-            </Paper>
-
-            <Box className="values-container">
-                <Typography variant="h4" align="center" className="typography-title" gutterBottom>
-                    Our Values
-                </Typography>
-                <Grid container spacing={4}>
-                    <Grid item xs={12} md={4} className="grid-item">
-                        <Paper elevation={2} className="paper">
-                            <Typography variant="h6" className="typography-title" gutterBottom>
-                                Innovation
-                            </Typography>
-                            <Typography variant="body2" className="typography-body">
-                                We embrace technology and creativity to provide top-notch solutions.
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12} md={4} className="grid-item">
-                        <Paper elevation={2} className="paper">
-                            <Typography variant="h6" className="typography-title" gutterBottom>
-                                Commitment
-                            </Typography>
-                            <Typography variant="body2" className="typography-body">
-                                Our team is dedicated to exceeding customer expectations every step of the way.
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12} md={4} className="grid-item">
-                        <Paper elevation={2} className="paper">
-                            <Typography variant="h6" className="typography-title" gutterBottom>
-                                Courage
-                            </Typography>
-                            <Typography variant="body2" className="typography-body">
-                                We strive to face challenges head-on, embracing change and uncertainty with confidence.
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid item xs={12} md={4} className="grid-item">
-                        <Paper elevation={2} className="paper">
-                            <Typography variant="h6" className="typography-title" gutterBottom>
-                                Trust
-                            </Typography>
-                            <Typography variant="body2" className="typography-body">
-                                We build lasting relationships by being reliable, transparent, and respectful.
-                            </Typography>
-                        </Paper>
-                    </Grid>
-                </Grid>
+            <Box
+                className="aboutUs-section"
+                style={{ '--aboutUs-bg': `url(${easeTruckThree})` }}
+            >
+                <Box className="aboutUs-overlay">
+                    <Typography variant="h3" className="typography-title" gutterBottom>
+                        About Us
+                    </Typography>
+                    <Typography variant="h6" className="typography-body" >
+                        We are a tech-driven company focused on transforming truck and fleet management. By blending innovation with practical logistics expertise, we streamline operations, reduce inefficiencies, and help businesses thrive. From real-time tracking to smart automation, we create tools that empower logistics companies to stay ahead.
+                    </Typography>
+                </Box>
             </Box>
 
-            <Box className="team-section">
-                <Typography variant="h4" align="center" className="typography-title" gutterBottom>
+            <Box className="mission-overlay">
+                <Typography variant="h3" className="mission-title" gutterBottom>
+                    Our Mission
+                </Typography>
+
+                <Box className="mission-content">
+                    <Typography variant="h6" className="mission-body">
+                        Our mission is to lead the evolution of AI-powered systems by crafting intelligent, intuitive solutions that serve both individuals and businesses...
+                    </Typography>
+
+                    <Box className="mission-image-wrapper">
+                        <img src={easeTruckLogo} alt="Mission" className="mission-image" />
+                    </Box>
+                </Box>
+            </Box>
+
+
+
+            <Box className="puzzle-section">
+                <Typography variant="h4" className="puzzle-title">Our Core Values</Typography>
+                <Box className="puzzle-layout">
+                    <Box className="puzzle-grid">
+                        {values.map((value, index) => (
+                            <Box
+                                key={index}
+                                className={`puzzle-piece piece-${index} ${activeIndex === index ? 'active' : ''}`}
+                                onClick={() => setActiveIndex(index)}
+                            >
+                                🧩
+                            </Box>
+                        ))}
+                    </Box>
+                    <Paper elevation={3} className="value-display">
+                        <Typography variant="h5" className="value-title">{values[activeIndex].title}</Typography>
+                        <Typography className="value-description">{values[activeIndex].description}</Typography>
+                    </Paper>
+                </Box>
+            </Box>
+
+            <Box
+                className="team-section"
+                style={{ '--team-bg': `url(${easeTruckSeven})` }}
+            >
+                <Typography className="team-heading" variant="h4" align="center" gutterBottom>
                     Our Team
                 </Typography>
-                <Typography variant="body1" align="center" className="typography-body" paragraph>
-                    EaseTruck is powered by a passionate team of innovators and developers
-                    working together to redefine the truck management experience.
-                </Typography>
+
+                <Box className="team-layout">
+                    <Box className="team-content">
+                        <Typography variant="h6" className="team-text">
+                            EaseTruck is powered by a passionate team of innovators and developers
+                            working together to redefine the truck management experience.
+                        </Typography>
+                    </Box>
+
+                    <Box className="team-image-wrapper">
+                        <img src={easeTruckSeven} alt="Team" className="team-image" />
+                    </Box>
+                </Box>
             </Box>
-            <Box className="team-section">
-                <Typography variant="h4" align="center" mt={5} fontWeight="bold">
-                    What Our Clients Say
-                </Typography>
-                <Testimonial/>
-            </Box>
+
+
         </Container>
 
     );

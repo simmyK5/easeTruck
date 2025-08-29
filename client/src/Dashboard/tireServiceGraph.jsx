@@ -2,7 +2,7 @@ import React, { useEffect, useState,useCallback } from 'react';
 import axios from 'axios';
 import { Grid,  Typography, Card, CardContent } from '@mui/material';
 
-const TireServiceGraph = ({ userId, period }) => {
+const TireServiceGraph = ({ userId, period,userRole }) => {
     const [tireServiceData, setTireServiceData] = useState(null);
 
     // Fetch acceleration data based on userId and period

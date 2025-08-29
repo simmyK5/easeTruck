@@ -9,8 +9,13 @@ import IdleTimeGraph from '../Dashboard/idleTimeGraph';
 import NotificationAlert from '../notification/notificationAlert';
 import ServiceCalender from '../recentActivity/serviceCalender';
 import RecentActivity from '../recentActivity/recentActivity';
+import RecentClaimConfirmation from '../recentActivity/recentClaimConfirmation';
 import './vehicleOwnerHomePage.css';
 import OverLoadGraph from '../Dashboard/overLoadGraph';
+import Ad from '../Ad/ad';
+import LoadNumGraph from '../Dashboard/loadNumGraph';
+import HighSpeed from '../HighSpeed/highSpeed';
+import SecurityAlertGraph from '../Dashboard/securityAlertGraph';
 
 const VehicleOwnerHomePage = () => {
   const {  user, isAuthenticated } = useAuth0();
@@ -20,19 +25,39 @@ const VehicleOwnerHomePage = () => {
   const location = useLocation();
   const currentUsername = location.state?.currentUsername || 'Guest';
 
-  useEffect(() => {
+ /* useEffect(() => {
     // Check if data is already fetched from sessionStorage
     if (!sessionStorage.getItem('userDetailsFetched') && isAuthenticated && user?.email) {
       fetchUserDetails(user.email);
     } else {
+      console.log("yinifd")
       setUserDetails(JSON.parse(sessionStorage.getItem('userDetails'))); // Load from sessionStorage if already fetched
     }
+  }, [isAuthenticated, user?.email]);*/
+
+  useEffect(() => {
+    const savedUser = sessionStorage.getItem('userDetails');
+    const parsedUser = savedUser ? JSON.parse(savedUser) : null;
+  
+    if (
+      !sessionStorage.getItem('userDetailsFetched') ||
+      !parsedUser || 
+      parsedUser.email !== user?.email // mismatch detected
+    ) {
+      if (isAuthenticated && user?.email) {
+        fetchUserDetails(user.email);
+      }
+    } else {
+      setUserDetails(parsedUser);
+    }
   }, [isAuthenticated, user?.email]);
+  
 
   const fetchUserDetails = async (email) => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/user/users/${email}`);
       setUserDetails(response.data);
+      console.log("chicken yethu",response.data)
 
       // Store user details in sessionStorage to avoid re-fetching on future visits
       sessionStorage.setItem('userDetails', JSON.stringify(response.data));
@@ -53,7 +78,7 @@ const VehicleOwnerHomePage = () => {
       navigate("/"); // Redirect to home if not authenticated
     }
   };
-
+  console.log("chicken yethu",userDetails)
   return (
     <div className="main-container">
       <div className="content-container">
@@ -63,39 +88,28 @@ const VehicleOwnerHomePage = () => {
             <Typography variant="body1" paragraph>
               This is the homepage of the Streamlined Trucking app. Here you can manage your fleet, track shipments, and more.
             </Typography>
+            <Ad/>
           </Container>
 
           <Container className="dashboard-section">
             <Typography variant="h4" gutterBottom>Real-Time Dashboard</Typography>
-            <Box className="dashboard-form">
-              <FormControl fullWidth data-testid="periodFormControl">
-                <InputLabel>Period</InputLabel>
-                <Select value={period} onChange={(e) => setPeriod(e.target.value)}  label="period" data-testid="periodSelect">
-                  <MenuItem value="today" data-testid="Today">Today</MenuItem>
-                  <MenuItem value="week" data-testid="This Week">This Week</MenuItem>
-                  <MenuItem value="month" data-testid="This Month">This Month</MenuItem>
-                  <MenuItem value="4months" data-testid="Last 4 Months">Last 4 Months</MenuItem>
-                  <MenuItem value="year" data-testid="This Year">This Year</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="contained" color="primary" onClick={handleDownload} className="download-button" data-testid="downloadBtn">
-                Download Report
-              </Button>
-            </Box>
 
-            {userDetails && period && (
+            {userDetails && (
               <Grid container spacing={3} style={{ width: '100%' }}>
                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                  <AccelerationGraph userId={userDetails._id} period={period} />
+                  <AccelerationGraph userId={userDetails._id} userRole={userDetails.userRole}/>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                  <FuelGraph userId={userDetails._id} period={period} />
+                  <HighSpeed userId={userDetails._id} userRole={userDetails.userRole}/>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                  <IdleTimeGraph userId={userDetails._id} period={period} />
+                  <IdleTimeGraph userId={userDetails._id} userRole={userDetails.userRole}/>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
-                  <OverLoadGraph userId={userDetails._id} period={period} />
+                  <SecurityAlertGraph userId={userDetails._id} userRole={userDetails.userRole}/>
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} style={{ height: 600 }}>
+                  <LoadNumGraph userId={userDetails._id} userRole={userDetails.userRole} />
                 </Grid>
               </Grid>
             )}
@@ -112,6 +126,7 @@ const VehicleOwnerHomePage = () => {
           <Container>
             {userDetails && <ServiceCalender userId={userDetails._id} />}
             {userDetails && <RecentActivity userId={userDetails._id} />}
+            {userDetails && <RecentClaimConfirmation userId={userDetails._id} />}
           </Container>
         </Box>
       </div>

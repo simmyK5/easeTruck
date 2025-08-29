@@ -4,15 +4,6 @@ const messageSchema = new mongoose.Schema({
     chatId: String,
     senderId: String,
     content: [],
-    callLog: [{
-        senderId: String ,
-        callType: String ,
-        startTime: Date ,
-        isCall: Boolean ,
-        callEnd: Date ,
-        callDuration: String ,
-        notes: []
-    }],
     usersInConversation: [],
 
     /* callType: { type: String, enum: ['audio', 'video'], default: 'video' }, // Call type

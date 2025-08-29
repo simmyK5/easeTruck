@@ -1,17 +1,18 @@
-import React, { useEffect, useState,useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { Grid, Typography, Card, CardContent } from '@mui/material';
 
-const TaskGraph = ({ userId, period }) => {
+const TaskGraph = ({ userId, period, userRole }) => {
     const [taskData, setTaskData] = useState(null);
 
     // Fetch acceleration data based on userId and period
-    const fetchTask =useCallback(async () => {
+    const fetchTask = useCallback(async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/dashboard/task`, {
                 params: {
                     userId: userId,
-                    period: period
+                    period: period,
+                    userRole: userRole
                 }
             });
             //console.log(response.data)
@@ -19,7 +20,7 @@ const TaskGraph = ({ userId, period }) => {
         } catch (error) {
             console.error('Error fetching turning data:', error);
         }
-    }, [userId,period]);
+    }, [userId, period]);
 
     useEffect(() => {
         if (userId && period) {
@@ -27,9 +28,9 @@ const TaskGraph = ({ userId, period }) => {
             console.log(period)
             fetchTask();
         }
-    }, [userId, period,fetchTask]);
+    }, [userId, period, fetchTask]);
 
-    
+
 
     return (
         <Grid item xs={12} sm={6} md={3}>
@@ -62,12 +63,12 @@ const TaskGraph = ({ userId, period }) => {
                         </>
                     ) : (
                         <>
-                        <Typography variant="h6" gutterBottom>
-                            Task Data
-                          </Typography>
-                        <Typography variant="h8" gutterBottom>
-                          No data available
-                        </Typography>
+                            <Typography variant="h6" gutterBottom>
+                                Task Data
+                            </Typography>
+                            <Typography variant="h8" gutterBottom>
+                                No data available
+                            </Typography>
                         </>
                     )}
 

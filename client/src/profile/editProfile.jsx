@@ -15,7 +15,6 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import SubscriptionModal from '../subscription/subscription'; // Import the Subscription Modal
 import TermsAndConditions from './termsAndCondition';
 
 
@@ -162,6 +161,11 @@ export default function EditProfile() {
           navigate('/mechanic-home', { state: { currentUsername } });
         }  else if (userRole === 'adPublisher') {
           navigate('/adPublisherHomePage', { state: { currentUsername } })
+        }else if (userRole === 'admin') {
+          navigate('/adminHomePage', { state: { currentUsername } });
+        }
+        else if (userRole === 'superAdmin') {
+          navigate('/adminHomePage', { state: { currentUsername } });
         }
         else {
           navigate('/profile');
@@ -248,16 +252,16 @@ export default function EditProfile() {
   const renderSubscriptionOptions = () => {
     const roleBasedPlans = {
       driver: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Driver Plan', price: 29.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId: import.meta.env.VITE_DRIVER_PLAN_SUBSCRIPTION },
+        { title: 'Free Plan', price: 0, features: ['Manage invoices', 'View route selection','Post advertisements'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
+        { title: 'Driver Plan', price: 29.99, features: ['Manage invoices', 'View route selection','Post advertisements'], description: 'Perfect for professional drivers, offering tools and features to enhance efficiency and productivity.', planId: import.meta.env.VITE_DRIVER_PLAN_SUBSCRIPTION },
       ],
       vehicleOwner: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Vehicle Owner Plan', price: 39.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_VEHICLE_OWNER_PLAN_SUBSCRIPTION },
+        { title: 'Free Plan', price: 0, features: [' Manage trucks', 'track truck locations in real time', 'Receive security alerts'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
+        { title: 'Vehicle Owner Plan', price: 39.99, features: [' Manage trucks', 'track truck locations in real time', 'Receive security alerts'], description: 'Designed for vehicle owners, this plan includes advanced tools and features to manage your vehicle effectively.', planId: import.meta.env.VITE_VEHICLE_OWNER_PLAN_SUBSCRIPTION },
       ],
       adPublisher: [
-        { title: 'Free Plan', price: 0, features: ['Feature 1', 'Feature 2'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
-        { title: 'Ad Publisher Plan', price: 39.99, features: ['Feature 1', 'Feature 2', 'Feature 3'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_AD_PUBLISHER_PLAN_SUBSCRIPTION },
+        { title: 'Free Plan', price: 0, features: ['Post advertisements','View advertisements'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_FREE_PLAN_SUBSCRIPTION },
+        { title: 'Ad Publisher Plan', price: 39.99, features: ['Post advertisements','View advertisements'], description: 'Ideal for advertisers, this plan includes advanced features to maximize visibility.', planId: import.meta.env.VITE_AD_PUBLISHER_PLAN_SUBSCRIPTION },
       ],
     };
 
@@ -386,13 +390,6 @@ export default function EditProfile() {
               data-testid="userRole"
             >
               <FormControlLabel
-                value="admin"
-                control={<Radio color="primary" />}
-                label="Admin"
-                disabled={isSubscribed}
-                data-testid="admin"
-              />
-              <FormControlLabel
                 value="driver"
                 control={<Radio color="primary" />}
                 label="Driver"
@@ -449,17 +446,6 @@ export default function EditProfile() {
         </FormGroup>
       </form>
 
-      {/* Subscription Modal */}
-      <SubscriptionModal
-        open={openModal}
-        plan={selectedPlan}
-        userEmail={user.email}
-        onClose={handleCloseModal}
-        setIsSubscribed={setIsSubscribed}
-        setCurrentSubscription={setCurrentSubscription}
-        setSubscriptionId={handleSubscriptionIdUpdate}
-        profileData={profileData}
-      />
 
       <TermsAndConditions
         open={openTandC}

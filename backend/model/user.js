@@ -13,7 +13,7 @@ const UserSchema = new mongoose.Schema({
         required: true,
         max: 50,
         unique: true,
-        lowercase: true, 
+        lowercase: true,
     },
     password: {
         type: String,
@@ -29,10 +29,16 @@ const UserSchema = new mongoose.Schema({
     driverPool: {
         type: Boolean
     },
-    cvUrl: { 
+    cvUrl: {
         type: String
     },
     termsAndConditions: {
+        type: Boolean
+    },
+    contract: {
+        type: Boolean
+    },
+    isClaimed: {
         type: Boolean
     },
     vehicleOwnerId: {
@@ -46,17 +52,22 @@ const UserSchema = new mongoose.Schema({
     },
     vouchers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Voucher' }],
     acceleration: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Acceleration' }],
+    glassBreak: [{ type: mongoose.Schema.Types.ObjectId, ref: 'GlassBreak' }],
+    people: [{ type: mongoose.Schema.Types.ObjectId, ref: 'People' }],
+    puncher: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Puncher' }],
+    weapon: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Weapon' }],
     fuel: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Fuel' }],
     idletimes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Idletimes' }],
+    highSpeed: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HighSpeed' }],
     steerings: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Steering' }],
     brake: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Brake' }],
-    truck: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Truck' }] ,
-    task: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }] ,
-    subscription: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }] ,
-    installation: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Installation' }] ,
-    ad: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ad' }] ,
-    notification: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }] ,
-    feedback: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }] ,
+    truck: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Truck' }],
+    task: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+    subscription: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }],
+    installation: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Installation' }],
+    ad: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Ad' }],
+    notification: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notification' }],
+    feedback: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Feedback' }],
     emailTrails: [{ type: mongoose.Schema.Types.ObjectId, ref: 'EmailTrail' }]
 
 },

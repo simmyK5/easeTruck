@@ -11,6 +11,8 @@ import {
   Button,
   Divider,
   Box,
+  Backdrop,
+  CircularProgress
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate } from 'react-router-dom';
@@ -31,14 +33,7 @@ const Layout = ({ children }) => {
     const initializeUserAndRole = async () => {
       setLoading(true);
       try {
-        const storedUserEmail = localStorage.getItem('user_email');
-        if (storedUserEmail) {
-          const token = await getAccessTokenSilently();
-          const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/auth/user-role/${storedUserEmail}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUserRole(response.data.role);
-        } else if (user?.email) {
+        if (user?.email) {
           const email = user.email;
           const token = await getAccessTokenSilently();
           localStorage.setItem('user_email', email);
@@ -71,10 +66,29 @@ const Layout = ({ children }) => {
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
+  {
+    loading && (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 1300,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: 'rgba(255, 255, 255, 0.5)', // semi-transparent background
+          pointerEvents: 'auto', // blocks interaction with page
+        }}
+      >
+        <CircularProgress color="primary" />
+      </div>
+    )
   }
 
+  console.log("not mad", userRole)
   return (
     <div>
       <AppBar position="fixed">
@@ -105,12 +119,18 @@ const Layout = ({ children }) => {
           <ListItem button onClick={() => handleNavigation('/howItWorks')}>
             <ListItemText primary="How It Works" />
           </ListItem>
+          <ListItem button onClick={() => handleNavigation('/voucher')} data-testid="voucher">
+            <ListItemText primary="voucher" />
+          </ListItem>
           <Divider />
-         
+
           {userRole === 'vehicleOwner' && (
             <>
               <ListItem button onClick={() => handleNavigation('/editProfile')} data-testid="editProfileButton" >
                 <ListItemText primary="Profile" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/outstandingInstallation')} data-testid="outstanding Installation" >
+                <ListItemText primary="Installation Payment" />
               </ListItem>
               <ListItem button onClick={() => handleNavigation('/adDashboard')} data-testid="adDashboard">
                 <ListItemText primary="Ad Dashboard" />
@@ -145,9 +165,6 @@ const Layout = ({ children }) => {
               <ListItem button onClick={() => handleNavigation('/truck')} data-testid="truck">
                 <ListItemText primary="Truck" />
               </ListItem>
-              <ListItem button onClick={() => handleNavigation('/voucher')} data-testid="voucher">
-                <ListItemText primary="voucher" />
-              </ListItem>
               <ListItem button onClick={() => handleNavigation('/dashboard')} data-testid="dashboard">
                 <ListItemText primary="Dashboard" />
               </ListItem>
@@ -165,6 +182,12 @@ const Layout = ({ children }) => {
               </ListItem>
               <ListItem button onClick={() => handleNavigation('/allServiceSummary')} data-testid="allServiceSummary">
                 <ListItemText primary="Service Summary" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/hijack')} data-testid="hijack">
+                <ListItemText primary="Hijack" />
+              </ListItem>
+               <ListItem button onClick={() => handleNavigation('/highSpeed')} data-testid="High Speed">
+                <ListItemText primary="High Speed" />
               </ListItem>
             </>
           )}
@@ -276,6 +299,21 @@ const Layout = ({ children }) => {
               <ListItem button onClick={() => handleNavigation('/termAndCondtionContent')} data-testid="termAndCondtionContent">
                 <ListItemText primary="Term And Condtion" />
               </ListItem>
+              <ListItem button onClick={() => handleNavigation('/hijackAdmin')} data-testid="hijack admin">
+                <ListItemText primary="Hijack Admin" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminLocation')} data-testid="Admin Location">
+                <ListItemText primary="Admin Location" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminHighSpeed')} data-testid="Admin High Speed">
+                <ListItemText primary="Admin High Speed" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminSupport')} data-testid="Admin Support">
+                <ListItemText primary="Support" />
+              </ListItem>
+               <ListItem button onClick={() => handleNavigation('/leadInfo')} data-testid="Lead Info">
+                <ListItemText primary="Lead Info" />
+              </ListItem>
             </>
           )}
           {userRole === 'technician' && (
@@ -316,12 +354,6 @@ const Layout = ({ children }) => {
               <ListItem button onClick={() => handleNavigation('/adList')} data-testid="adList">
                 <ListItemText primary="Ad List" />
               </ListItem>
-              <ListItem button onClick={() => handleNavigation('/chat')} data-testid="chat">
-                <ListItemText primary="Chat" />
-              </ListItem>
-              <ListItem button onClick={() => handleNavigation('/mechanic')} data-testid="mechanic">
-                <ListItemText primary="Mechanic" />
-              </ListItem>
               <ListItem button onClick={() => handleNavigation('/feedback')} data-testid="feedback">
                 <ListItemText primary="Feedback" />
               </ListItem>
@@ -330,6 +362,125 @@ const Layout = ({ children }) => {
               </ListItem>
               <ListItem button onClick={() => handleNavigation('/termAndCondtionContent')} data-testid="termAndCondtionContent">
                 <ListItemText primary="Term And Condtion" />
+              </ListItem>
+            </>
+          )}
+
+          {userRole === 'superAdmin' && (
+            <>
+              <ListItem button onClick={() => handleNavigation('/editProfile')} data-testid="editProfileButton" >
+                <ListItemText primary="Profile" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/outstandingInstallation')} data-testid="outstanding Installation" >
+                <ListItemText primary="Installation Payment" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adDashboard')} data-testid="adDashboard">
+                <ListItemText primary="Ad Dashboard" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/driverList')} data-testid="driverList">
+                <ListItemText primary="Driver List" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/driverPool')} data-testid="driverPool">
+                <ListItemText primary="Driver Pool" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/task')} data-testid="task">
+                <ListItemText primary="Task" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/createAd')} data-testid="createAd">
+                <ListItemText primary="Create Ad" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adList')} data-testid="adList">
+                <ListItemText primary="Ad List" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/installation')} data-testid="installation">
+                <ListItemText primary="Installation" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/chat')} data-testid="chat">
+                <ListItemText primary="chat" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/vehicleOwnerMap')} data-testid="vehicleOwnerMap">
+                <ListItemText primary="VehicleOwner Map" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/mechanic')} data-testid="mechanic">
+                <ListItemText primary="Mechanic" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/truck')} data-testid="truck">
+                <ListItemText primary="Truck" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/dashboard')} data-testid="dashboard">
+                <ListItemText primary="Dashboard" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/allNotifications')} data-testid="allNotifications">
+                <ListItemText primary="Notifications" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/feedback')} data-testid="feedback">
+                <ListItemText primary="Feedback" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/termAndCondtionContent')} data-testid="termAndCondtionContent">
+                <ListItemText primary="Term And Condtion" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/allServiceSummary')} data-testid="allServiceSummary">
+                <ListItemText primary="Service Summary" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/driveTask')} data-testid="driveTask">
+                <ListItemText primary="Task" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/driverMap')} data-testid="driverMap">
+                <ListItemText primary="Driver Map" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminDashboard')} data-testid="adminDashboard">
+                <ListItemText primary="Admin Dashboard" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/technician')} data-testid="technician">
+                <ListItemText primary="Technician" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminAd')} data-testid="adminAd">
+                <ListItemText primary="Admin Ad" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminList')} data-testid="adminList">
+                <ListItemText primary="Admin List" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/admin')} data-testid="admin">
+                <ListItemText primary="Admin" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminInstallation')} data-testid="adminInstallation">
+                <ListItemText primary="Admin Installation" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/technicianInstallation')} data-testid="technicianInstallation">
+                <ListItemText primary="Technician Installation" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/breakDownList')} data-testid="breakDownList">
+                <ListItemText primary="breakDownList" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminFeedback')} data-testid="adminFeedback">
+                <ListItemText primary="Admin Feedback" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/termAndCondtionContent')} data-testid="termAndCondtionContent">
+                <ListItemText primary="Term And Condtion" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/technicianInstallation')} data-testid="technicianInstallation">
+                <ListItemText primary="Technician Installation" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/technician')} data-testid="technician">
+                <ListItemText primary="Technician" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/admin')} data-testid="admin">
+                <ListItemText primary="Admin" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/mechanic')} data-testid="mechanic">
+                <ListItemText primary="Mechanic" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/hijackAdmin')} data-testid="hijack admin">
+                <ListItemText primary="Hijack Admin" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminLocation')} data-testid="Admin Location">
+                <ListItemText primary="Admin Location" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/adminSupport')} data-testid="Admin Support">
+                <ListItemText primary="Support" />
+              </ListItem>
+              <ListItem button onClick={() => handleNavigation('/leadInfo')} data-testid="Lead Info">
+                <ListItemText primary="Lead Info" />
               </ListItem>
             </>
           )}

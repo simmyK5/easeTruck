@@ -33,21 +33,21 @@ const gateway = new braintree.BraintreeGateway({
 
 router.get('/client-token', async (req, res) => {
   try {
-      gateway.clientToken.generate({}, (err, response) => {
-          if (err) {
-              console.error('Error generating client token:', err);
-              return res.status(500).json({ success: false, error: 'Error generating client token.' });
-          }
-          res.json({ clientToken: response.clientToken });
-      });
+    gateway.clientToken.generate({}, (err, response) => {
+      if (err) {
+        console.error('Error generating client token:', err);
+        return res.status(500).json({ success: false, error: 'Error generating client token.' });
+      }
+      res.json({ clientToken: response.clientToken });
+    });
   } catch (error) {
-      console.error('Unexpected error:', error.message);
-      res.status(500).json({ success: false, error: 'Unexpected error occurred.' });
+    console.error('Unexpected error:', error.message);
+    res.status(500).json({ success: false, error: 'Unexpected error occurred.' });
   }
 });
 
 // Route to redeem voucher and process payment
-router.post('/redeem-voucher', async (req, res) => {
+/*router.post('/redeem-voucher', async (req, res) => {
   const { voucherCode, paymentMethodNonce, amount } = req.body;
 
   try {
@@ -81,94 +81,69 @@ router.post('/redeem-voucher', async (req, res) => {
     console.error("Error processing payment:", error);
     res.status(500).json({ success: false, error: 'Failed to process payment.' });
   }
-});
+});*/
 
-router.get("/:userid", async (req, res) => {
-
-  console.log("kwnzakalani",req.params)
-  const currentVehicleOwner= req.params.userid
-
+router.get('/:code', async (req, res) => {
   try {
-    const vouchers = await Voucher.find({  vehicleOwnerId: currentVehicleOwner});
-    console.log("what happening")
-    console.log(vouchers)
-    res.json(vouchers);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-})
-
-
-/*
-router.post('/redeem-voucher', async (req, res) => {
-  const { voucherCode, recipientEmail } = req.body;
-  console.log("menzi okuhle",voucherCode)
-  console.log("ngiphe amadla",recipientEmail)
-
-  try {
-    // Step 1: Validate voucher
-    const voucher = await Voucher.findOne({ code: voucherCode, isRedeemed: false });
-    if (!voucher) {
-      return res.status(400).json({ success: false, error: 'Invalid or already redeemed voucher.' });
+    const code = req.params.code;
+    if (!code) {
+      return res.status(400).json({ error: 'Missing code query parameter' });
     }
 
-    // Step 2: Get PayPal Access Token
-    const tokenResponse = await axios.post(
-      'https://api-m.sandbox.paypal.com/v1/oauth2/token',
-      'grant_type=client_credentials',
-      {
-        auth: {
-          username: process.env.PAYPAL_CLIENT_ID,
-          password: process.env.PAYPAL_CLIENT_SECRET,
-        },
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    );
-
-    const accessToken = tokenResponse.data.access_token;
-
-    // Step 3: Initiate Payout
-    const payoutRequest = {
-      sender_batch_header: {
-        sender_batch_id: `batch-${Date.now()}`,
-        email_subject: "You've received a payout!",
-      },
-      items: [
-        {
-          recipient_type: "EMAIL",
-          amount: {
-            value: voucher.value.toString(),
-            currency: "USD",
-          },
-          receiver: recipientEmail, // User's PayPal email
-          note: "Voucher Redemption Payout",
-        },
-      ],
-    };
-
-    const payoutResponse = await axios.post(
-      'https://api-m.sandbox.paypal.com/v1/payments/payouts',
-      payoutRequest,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    // Step 4: Mark the voucher as redeemed
-    voucher.isRedeemed = true;
-    await voucher.save();
-
-    res.json({ success: true, payout: payoutResponse.data });
-  } catch (error) {
-    console.error("Error processing payout:", error.response?.data || error.message);
-    res.status(500).json({ success: false, error: 'Failed to process payout.' });
+    console.log("yini bo", code)
+    // Find vouchers whose code contains the search term (case‑insensitive)
+    const vouchers = await Voucher.find({
+      code: { $regex: code, $options: 'i' }
+    });
+    res.json(vouchers);
+  } catch (err) {
+    console.error('Voucher lookup error:', err);
+    res.status(500).json({ error: 'Server error' });
   }
 });
-*/
+
+router.put("/payouts", async (req, res) => {
+  const {
+    voucherId,
+    fullName,
+    bankName,
+    accountNumber,
+    accountType,
+    branchCode
+  } = req.body;
+
+  try {
+    console.log("see body", req.body);
+
+    // Find the voucher by ID
+    const voucher = await Voucher.findById(voucherId).populate('claimVoucher');
+
+    if (!voucher) {
+      return res.status(400).json({ error: 'Voucher not found' });
+    }
+
+    // Update voucher fields
+    voucher.isRedeemed = true;
+
+    // Ensure claimVoucher is populated and exists
+    if (voucher.claimVoucher) {
+      voucher.claimVoucher.fullName = fullName;
+      voucher.claimVoucher.bankName = bankName;
+      voucher.claimVoucher.accountNumber = accountNumber;
+      voucher.claimVoucher.accountType = accountType;
+      voucher.claimVoucher.branchCode = branchCode;
+
+      await voucher.claimVoucher.save(); // Save claimVoucher changes
+    }
+
+    await voucher.save(); // Save voucher changes
+
+    res.json({ success: true, voucherId });
+  } catch (error) {
+    console.error("Payout error:", error);
+    res.status(500).send({ error: 'Internal Server Error' });
+  }
+});
+
 
 module.exports = router;

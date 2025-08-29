@@ -175,7 +175,7 @@ const AdminFeedback = () => {
     
             // Prepare the payload for the request
             const payload = {
-                service_id:import.meta.env.REACT_APP_SERVICE_ID,    // Service ID
+                service_id:import.meta.env.VITE_SERVICE_ID,    // Service ID
                 template_id: import.meta.env.VITE_TEMPLATE_ID,  // Template ID
                 user_id: import.meta.env.VITE_PUBLIC_KEY,      // Public Key (this acts as the user ID)
                 template_params: templateParams,                 // Template Parameters (from the emailData)

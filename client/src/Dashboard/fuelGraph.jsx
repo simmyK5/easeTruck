@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Grid, Typography } from '@mui/material';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const FuelGraph = ({ userId, period }) => {
+const FuelGraph = ({ userId, period,userRole }) => {
   const [fuelData, setFuelData] = useState(null);
 
   // Fetch fuel data based on userId and period

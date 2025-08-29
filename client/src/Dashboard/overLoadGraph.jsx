@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Grid, Typography } from '@mui/material';
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-const OverLoadGraph = ({ userId, period }) => {
+const OverLoadGraph = ({ userId, period,userRole }) => {
   const [overLoadData, setOverLoadData] = useState(null);
 
   // Fetch acceleration data based on userId and period
@@ -13,7 +13,8 @@ const OverLoadGraph = ({ userId, period }) => {
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/backend/dashboard/overLoad`, {
             params: {
                 userId: userId,
-                period: period
+                period: period,
+                userRole:userRole
             }
         });
 

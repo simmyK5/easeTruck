@@ -8,7 +8,7 @@ const voucherSchema = new mongoose.Schema({
   driver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   vehicleOwnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   notificationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Notification' },
-  voucherId: { type: mongoose.Schema.Types.ObjectId, ref: 'Voucher' },
+  claimVoucher: { type: mongoose.Schema.Types.ObjectId, ref: 'ClaimVoucher' },
   timestamp: { type: Date, default: Date.now },
 });
 

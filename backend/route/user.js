@@ -119,6 +119,19 @@ router.get('/truckDrivers/:vehicleOwnerId', async (req, res) => {
 
 
 //get all Mechanic
+
+router.get("/mechanics/:id", async (req, res) => {
+  console.log("lilili",req.params.id)
+  try {
+    const currentVehicleOwner = req.params.id;
+    const mechanics = await User.find({ userRole: "mechanic", vehicleOwnerId: currentVehicleOwner })
+    res.json(mechanics);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/*
 router.get("/mechanics/:id", async (req, res) => {
   console.log(req.params.id)
   try {
@@ -127,7 +140,7 @@ router.get("/mechanics/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});*/
 
 
 //get all technicians
@@ -517,6 +530,38 @@ router.post('/termsAndCondition', async (req, res) => {
 
   } catch (error) {
     console.error('Error in /termsAndCondition route:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+router.post('/contract', async (req, res) => {
+  try {
+    const { email, checked } = req.body;
+
+    console.log("Received email:", email);
+
+    const user = await User.findOne({ email }); // Retrieve the user first
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update the termsAndConditions status
+    const updatedUser = await User.findOneAndUpdate(
+      { email },  // Search by email
+      {
+        contract: checked, // Update the termsAndConditions field
+      },
+      { new: true }  // Return the updated document
+    );
+
+    console.log('Updated User:', updatedUser);
+    // Return the updated user document in the response
+    res.json(updatedUser);
+
+  } catch (error) {
+    console.error('Error in contract route:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
