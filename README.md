@@ -48,6 +48,7 @@ cd easetruck
 
 Install backend dependencies:
 cd backend
+update MONGO_URL in env file currently pointing to my local env
 npm install
 npm run dev
 
